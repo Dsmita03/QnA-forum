@@ -1,10 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middlewares/auth");
-const controller = require("../controllers/questionController");
+import express from "express";
+import auth from "../middlewares/auth.js";
+import {
+  createQuestion,
+  getAllQuestions,
+  voteQuestion
+} from "../controllers/questionController.js";
 
-router.post("/", auth, controller.createQuestion);
-router.get("/", controller.getAllQuestions);
-router.post("/vote/:id", auth, controller.voteQuestion);
+const questionrouter = express.Router();
 
-module.exports = router;
+questionrouter.post("/", auth, createQuestion);
+questionrouter.get("/", getAllQuestions);
+questionrouter.post("/vote/:id", auth, voteQuestion);
+
+export default questionrouter;
