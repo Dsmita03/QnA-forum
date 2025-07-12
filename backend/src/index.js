@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import questionrouter from "./routes/questionRoutes.js";
 import answerrouter from "./routes/answerRoutes.js";
 import commentRouter from "./routes/commentRoutes.js";
+import authRouter from "./routes/authRoutes.js";
 
 
 dotenv.config();
@@ -29,6 +30,7 @@ mongoose
 app.use("/api/questions", questionrouter);
 app.use("/api/answers", answerrouter);
 app.use("/api/comments", commentRouter);
+app.use("/api/auth",authRouter)
 
 // Root test route
 app.get("/", (req, res) => {
