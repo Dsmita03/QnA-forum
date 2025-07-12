@@ -1,18 +1,50 @@
 'use client';
 
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { useNavigate } from "react-router";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      },{
+        withCredentials: true
+      });
+      if(res.status === 200) {
+        console.log(res.data);
+  
+      }
+      // TODO: Handle token, redirect, etc.
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4">
       <div className="flex flex-col md:flex-row items-center max-w-4xl bg-white shadow-md rounded-2xl overflow-hidden w-full">
         {/* Illustration */}
         <div className="hidden md:flex flex-col justify-center items-center p-8 bg-white">
           <Image
-            src="/illustration.png" // Put your illustration in the /public folder
+            src="/illustration.png"
             alt="Login Illustration"
             width={250}
             height={250}
@@ -24,24 +56,35 @@ export default function Login() {
           <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
           <p className="text-sm text-gray-500 mb-6">Please login to your account</p>
 
-          <form className="flex flex-col space-y-4">
+          <form className="flex flex-col space-y-4" onSubmit={handleLogin}>
             <input
               type="email"
               placeholder="Your Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="border px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+              required
             />
             <input
               type="password"
               placeholder="Your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="border px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+              required
             />
             <button
               type="submit"
-              className="bg-orange-500 text-white py-3 rounded-md hover:bg-orange-600 transition"
+              disabled={loading}
+              className="bg-orange-500 text-white py-3 rounded-md hover:bg-orange-600 transition disabled:opacity-50"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
+
+          {error && (
+            <p className="text-sm text-red-500 mt-2">{error}</p>
+          )}
 
           <div className="my-4 flex items-center justify-center">
             <div className="border-t w-full mr-2"></div>
