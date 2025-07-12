@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useNavigate } from "react-router";
+import { useRouter } from "next/router";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ export default function Signup() {
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+    const router = useRouter();
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -30,7 +31,7 @@ export default function Signup() {
 
      if(res.status === 201) {
       console.log(res.data);
-    
+      router.push("/")
       
      }
     } catch (err: any) {
