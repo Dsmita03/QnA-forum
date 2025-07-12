@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import questionrouter from "./routes/questionRoutes";
-import answerrouter from "./routes/answerRoutes";
-import commentRouter from "./routes/commentRoutes";
+import questionrouter from "./routes/questionRoutes.js";
+import answerrouter from "./routes/answerRoutes.js";
+import commentRouter from "./routes/commentRoutes.js";
 
 
 dotenv.config();
@@ -19,10 +19,7 @@ app.use(express.json());
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
