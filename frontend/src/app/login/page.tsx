@@ -51,7 +51,7 @@ export default function Login() {
 
           <button className="flex items-center justify-center gap-3 border py-3 w-full rounded-md hover:bg-gray-50 transition">
             <FcGoogle size={20} />
-            <span>Login with Google</span>
+            <span>Continue with Google</span>
           </button>
 
           <p className="text-sm text-center mt-6">
