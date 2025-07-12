@@ -9,48 +9,78 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { TagInput } from '@/components/TagInput';
 import { useAppStore } from '@/store';
 import axios from 'axios';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const AskQuestionPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const user=useAppStore((state)=>state.user)
-  
-  // Inside your component
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const [errors, setErrors] = useState<string[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
 
-  if (!title || !description || tags.length === 0) {
-    alert("Please fill in all fields.");
-    return;
-  }
+  const user = useAppStore((state) => state.user);
 
-  try {
-    const questionData = {
-      title,
-      description,
-      tags,
-      userId: user.userId, // your store should have the user with _id
-    };
+  useEffect(() => {
+    console.log('User', user);
+  }, [user]);
 
-    const response = await axios.post("http://localhost:5000/api/questions", questionData, {
-      withCredentials: true, 
-    });
-   if(response.status===201){
-    alert("Question submitted successfully!");
-    setTitle('');
-    setDescription('');
-    setTags([]);
-   }
-  } catch (error) {
-    console.error("❌ Error submitting question:", error);
-    alert("Failed to submit question. Please try again.");
-  }
-};
+  const validateFields = () => {
+    const issues: string[] = [];
+
+    if (!title.trim()) issues.push('Title is required.');
+    else if (title.length < 10) issues.push('Title must be at least 10 characters.');
+
+    if (!description.trim() || description === '<p></p>') issues.push('Description is required.');
+
+    if (tags.length === 0) issues.push('At least one tag is required.');
+
+    setErrors(issues);
+    setShowDialog(issues.length > 0);
+
+    return issues.length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateFields()) return;
+
+    try {
+      const questionData = {
+        title,
+        description,
+        tags,
+        userId: user?.userId,
+      };
+
+      const response = await axios.post('http://localhost:5000/api/questions', questionData, {
+        withCredentials: true,
+      });
+
+      if (response.status === 201) {
+        setTitle('');
+        setDescription('');
+        setTags([]);
+        alert('✅ Question submitted successfully!');
+      }
+    } catch (error: any) {
+      console.error('❌ Error submitting question:', error);
+      setErrors([
+        error?.response?.data?.message || 'Failed to submit question. Please try again.',
+      ]);
+      setShowDialog(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4 py-10">
-      <Card className="max-w-2xl mx-auto shadow-sm">
+      <Card className="max-w-2xl mx-auto shadow-md">
         <CardContent className="space-y-6 p-6">
           <h2 className="text-2xl font-bold text-gray-800">Ask Question</h2>
 
@@ -79,12 +109,35 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           {/* Submit Button */}
           <div className="text-right">
-            <Button type="submit" onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600 text-white shadow-md">
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
               Submit Question
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Error Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Something went wrong</DialogTitle>
+          </DialogHeader>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+            {errors.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
