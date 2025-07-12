@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../middlewares/auth.js";
+import verifyToken from "../middlewares/auth.js";
 import {
   addAnswer,
   voteAnswer,
@@ -8,8 +8,8 @@ import {
 
 const answerrouter = express.Router();
 
-answerrouter.post("/", auth, addAnswer);
-answerrouter.post("/vote/:id", auth, voteAnswer);
-answerrouter.post("/accept", auth, acceptAnswer);
+answerrouter.post("/", verifyToken, addAnswer);
+answerrouter.post("/vote/:id", verifyToken, voteAnswer);
+answerrouter.post("/accept", verifyToken, acceptAnswer);
 
 export default answerrouter;

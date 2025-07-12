@@ -12,4 +12,4 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Question", questionSchema);
+export const Question = mongoose.model("Question", questionSchema);

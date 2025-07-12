@@ -1,32 +1,32 @@
 // backend/index.js
 
-
-
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import questionrouter from "./routes/questionRoutes";
+import answerrouter from "./routes/answerRoutes";
+import commentRouter from "./routes/commentRoutes";
+
 
 dotenv.config();
 
 // Initialize app
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ROUTES
-import questionrouter from "./routes/questionRoutes";
-import answerrouter from "./routes/answerRoutes";
-import commentRouter from "./routes/commentRoutes";
+
 
 // Mount routes
 app.use("/api/questions", questionrouter);

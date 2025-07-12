@@ -1,6 +1,6 @@
 
-import Answer from "../models/Answer";
-import Question from "../models/Question";
+import {Answer} from "../models/Answer";
+import {Question} from "../models/Question";
 export const addAnswer = async (req, res) => {
   const { content, questionId } = req.body;
   try {

@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../middlewares/auth.js";
+import verifyToken from "../middlewares/auth.js";
 import {
   createQuestion,
   getAllQuestions,
@@ -8,8 +8,9 @@ import {
 
 const questionrouter = express.Router();
 
-questionrouter.post("/", auth, createQuestion);
+questionrouter.post("/", verifyToken, createQuestion);
 questionrouter.get("/", getAllQuestions);
-questionrouter.post("/vote/:id", auth, voteQuestion);
+questionrouter.post("/vote/:id", verifyToken, voteQuestion);
+
 
 export default questionrouter;
