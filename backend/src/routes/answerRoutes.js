@@ -1,10 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middlewares/auth");
-const controller = require("../controllers/answerController");
+import express from "express";
+import auth from "../middlewares/auth.js";
+import {
+  addAnswer,
+  voteAnswer,
+  acceptAnswer,
+} from "../controllers/answerController.js";
 
-router.post("/", auth, controller.addAnswer);
-router.post("/vote/:id", auth, controller.voteAnswer);
-router.post("/accept", auth, controller.acceptAnswer);
+const answerrouter = express.Router();
 
-module.exports = router;
+answerrouter.post("/", auth, addAnswer);
+answerrouter.post("/vote/:id", auth, voteAnswer);
+answerrouter.post("/accept", auth, acceptAnswer);
+
+export default answerrouter;
