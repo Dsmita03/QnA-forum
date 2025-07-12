@@ -21,7 +21,7 @@ const AskQuestionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4 py-10">
       <Card className="max-w-2xl mx-auto shadow-sm">
         <CardContent className="space-y-6 p-6">
           <h2 className="text-2xl font-bold text-gray-800">Ask Question</h2>
@@ -51,8 +51,8 @@ const AskQuestionPage = () => {
 
           {/* Submit Button */}
           <div className="text-right">
-            <Button type="submit" onClick={handleSubmit}>
-              Submit
+            <Button type="submit" onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600 text-white shadow-md">
+              Submit Question
             </Button>
           </div>
         </CardContent>

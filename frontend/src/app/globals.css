@@ -121,11 +121,11 @@
 
 /* Rich Text Editor Styles */
 .btn {
-  @apply px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
+  @apply px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-orange-300 rounded-md hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors;
 }
 
-.btn.bg-gray-300 {
-  @apply bg-gray-300 text-gray-900;
+.btn.bg-orange-200 {
+  @apply bg-orange-200 text-orange-900;
 }
 
 /* TipTap Editor List Styles */
@@ -251,25 +251,25 @@
 
 /* TipTap Editor Link Styles */
 .ProseMirror a {
-  color: #3b82f6;
+  color: #ea580c;
   text-decoration: underline;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .ProseMirror a:hover {
-  color: #1d4ed8;
+  color: #c2410c;
   text-decoration: underline;
 }
 
 .ProseMirror a:visited {
-  color: #7c3aed;
+  color: #9a3412;
 }
 
 /* Active link selection styling */
 .ProseMirror a.ProseMirror-selectednode {
-  background-color: #dbeafe;
-  outline: 2px solid #3b82f6;
+  background-color: #fed7aa;
+  outline: 2px solid #ea580c;
   outline-offset: 1px;
   border-radius: 2px;
 }

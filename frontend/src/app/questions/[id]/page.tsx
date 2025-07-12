@@ -32,7 +32,7 @@ export default function QuestionPage({ params }: Props) {
   const question = mockQuestion;
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 bg-gradient-to-br from-[#fffdfa] to-[#f9f5ff] min-h-screen rounded-xl shadow-sm">
+    <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] min-h-screen rounded-xl shadow-sm">
       {/* Breadcrumb */}
       <Breadcrumb
         items={[

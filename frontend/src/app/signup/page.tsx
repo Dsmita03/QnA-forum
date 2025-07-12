@@ -9,7 +9,7 @@ export default function Signup() {
   const [role, setRole] = useState("user");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f9f6f3] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4">
       <div className="flex flex-col md:flex-row items-center max-w-4xl bg-white shadow-md rounded-2xl overflow-hidden w-full">
         {/* Illustration */}
         <div className="hidden md:flex flex-col justify-center items-center p-8 bg-white">

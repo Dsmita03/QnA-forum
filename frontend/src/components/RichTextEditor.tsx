@@ -126,22 +126,22 @@ export const RichTextEditor = ({ value, onChange }: Props) => {
   return (
     <div>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-100 border border-b-0 border-gray-300 rounded-t-md">
-        <button onClick={() => editor.chain().focus().toggleBold().run()} className={cn('btn', { 'bg-gray-300': editor.isActive('bold') })}><PiTextBBold /></button>
-        <button onClick={() => editor.chain().focus().toggleItalic().run()} className={cn('btn', { 'bg-gray-300': editor.isActive('italic') })}><PiTextItalic /></button>
-        <button onClick={() => editor.chain().focus().toggleStrike().run()} className={cn('btn', { 'bg-gray-300': editor.isActive('strike') })}><PiTextStrikethrough /></button>
-        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={cn('btn', { 'bg-gray-300': editor.isActive('bulletList') })}><IoList /></button>
-        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cn('btn', { 'bg-gray-300': editor.isActive('orderedList') })}><HiNumberedList /></button>
-        <button onClick={() => editor.chain().focus().setTextAlign('left').run()} className={cn('btn', { 'bg-gray-300': editor.isActive({ textAlign: 'left' }) })}><CiTextAlignLeft /></button>
-        <button onClick={() => editor.chain().focus().setTextAlign('center').run()} className={cn('btn', { 'bg-gray-300': editor.isActive({ textAlign: 'center' }) })}><CiTextAlignCenter /></button>
-        <button onClick={() => editor.chain().focus().setTextAlign('right').run()} className={cn('btn', { 'bg-gray-300': editor.isActive({ textAlign: 'right' }) })}><CiTextAlignRight /></button>
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-gradient-to-r from-orange-50 to-orange-100 border border-b-0 border-orange-200 rounded-t-md">
+        <button onClick={() => editor.chain().focus().toggleBold().run()} className={cn('btn', { 'bg-orange-200': editor.isActive('bold') })}><PiTextBBold /></button>
+        <button onClick={() => editor.chain().focus().toggleItalic().run()} className={cn('btn', { 'bg-orange-200': editor.isActive('italic') })}><PiTextItalic /></button>
+        <button onClick={() => editor.chain().focus().toggleStrike().run()} className={cn('btn', { 'bg-orange-200': editor.isActive('strike') })}><PiTextStrikethrough /></button>
+        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={cn('btn', { 'bg-orange-200': editor.isActive('bulletList') })}><IoList /></button>
+        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cn('btn', { 'bg-orange-200': editor.isActive('orderedList') })}><HiNumberedList /></button>
+        <button onClick={() => editor.chain().focus().setTextAlign('left').run()} className={cn('btn', { 'bg-orange-200': editor.isActive({ textAlign: 'left' }) })}><CiTextAlignLeft /></button>
+        <button onClick={() => editor.chain().focus().setTextAlign('center').run()} className={cn('btn', { 'bg-orange-200': editor.isActive({ textAlign: 'center' }) })}><CiTextAlignCenter /></button>
+        <button onClick={() => editor.chain().focus().setTextAlign('right').run()} className={cn('btn', { 'bg-orange-200': editor.isActive({ textAlign: 'right' }) })}><CiTextAlignRight /></button>
         <button
           onClick={toggleLinkInput}
-          className={cn('btn', { 'bg-gray-300': showLinkInput })}
+          className={cn('btn', { 'bg-orange-200': showLinkInput })}
         >🔗</button>
         <button
           onClick={handleRemoveLink}
-          className={cn('btn', { 'bg-gray-300': editor.isActive('link') })}
+          className={cn('btn', { 'bg-orange-200': editor.isActive('link') })}
           disabled={!editor.isActive('link')}
         >🔗❌</button>
         <input
@@ -163,7 +163,7 @@ export const RichTextEditor = ({ value, onChange }: Props) => {
 
       {/* Link Input */}
       {showLinkInput && (
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-b-0 border-blue-200">
+        <div className="flex items-center gap-2 p-3 bg-orange-50 border border-b-0 border-orange-200">
           <input
             type="url"
             placeholder="Enter URL (e.g., https://example.com)"
@@ -184,7 +184,7 @@ export const RichTextEditor = ({ value, onChange }: Props) => {
           <button
             onClick={handleAddLink}
             disabled={!linkUrl.trim()}
-            className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-3 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Add Link
           </button>
