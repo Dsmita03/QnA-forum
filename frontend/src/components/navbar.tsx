@@ -38,8 +38,8 @@ export default function Navbar() {
             Tags
           </Link>
           <Link
-            href="/ask"
-            className={pathname === "/ask" ? "text-orange-500" : "hover:text-orange-500"}
+            href="/add-questions"
+            className={pathname === "/add-questions" ? "text-orange-500" : "hover:text-orange-500"}
           >
             Ask
           </Link>
