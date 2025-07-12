@@ -1,14 +1,29 @@
-import {Question} from "../models/Question.js";
+import { Question } from "../models/Question.js";
 
 export const createQuestion = async (req, res) => {
-  const { title, description, tags } = req.body;
   try {
-    const question = await Question.create({ title, description, tags, userId: req.user.uid });
+    const { title, description, tags, userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    const question = new Question({
+      title,
+      description,
+      tags,
+      user: userId, // save as ObjectId ref
+    });
+
+    await question.save();
+
     res.status(201).json(question);
   } catch (err) {
+    console.error("Error creating question:", err);
     res.status(500).json({ error: "Failed to post question" });
   }
 };
+
 
 export const getAllQuestions = async (req, res) => {
   try {
