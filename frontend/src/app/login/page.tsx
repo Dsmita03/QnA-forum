@@ -7,13 +7,15 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useNavigate } from "react-router";
 import { useRouter } from "next/router";
+import { useAppStore } from "@/store";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  // const router = useRouter();
+  const setUser=useAppStore((state)=>state.setUser)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,7 +30,13 @@ export default function Login() {
       });
       if(res.status === 200) {
         console.log(res.data);
-        router.push("/")
+        const data=res.data.user;
+        setUser({
+                    userId: data._id,
+                    role: data.role,
+                    isLoggedIn: true,
+        })
+        // router.push("/")
       }
       // TODO: Handle token, redirect, etc.
     } catch (err: any) {

@@ -1,18 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { TagInput } from '@/components/TagInput';
+import { useAppStore } from '@/store';
 
 const AskQuestionPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-
+  const user=useAppStore((state)=>state.user)
+  useEffect(() => {
+     console.log("User",user);
+  },[user])
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const questionData = { title, description, tags };
