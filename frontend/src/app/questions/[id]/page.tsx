@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import Breadcrumb from "@/components/Breadcrumb";
 import AnswerItem from "@/components/AnswerItem";
 
-
 // Example mock data
 const mockQuestion = {
   id: "1",
@@ -30,11 +29,10 @@ interface Props {
 }
 
 export default function QuestionPage({ params }: Props) {
-  // Normally you'd fetch the question by ID here
   const question = mockQuestion;
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 bg-gradient-to-br from-[#fffdfa] to-[#f9f5ff] min-h-screen rounded-xl shadow-sm">
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
@@ -45,31 +43,34 @@ export default function QuestionPage({ params }: Props) {
       />
 
       {/* Question Title */}
-      <h1 className="text-3xl font-bold">{question.title}</h1>
+      <h1 className="text-3xl font-bold text-gray-800">{question.title}</h1>
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
         {question.tags.map((tag) => (
-          <Badge key={tag}>{tag}</Badge>
+          <Badge
+            key={tag}
+            className="bg-orange-100 text-orange-700 border border-orange-200"
+          >
+            {tag}
+          </Badge>
         ))}
       </div>
 
       {/* Description */}
-      <p className="text-lg">{question.description}</p>
-
-      {/* Answers */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Answers</h2>
-        {question.answers.map((ans, idx) => (
-          <AnswerItem
-            key={ans.id}
-            index={idx + 1}
-            content={ans.content}
-          />
-        ))}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+        <p className="text-gray-700 text-base leading-relaxed">{question.description}</p>
       </div>
 
-      {/* Submit Your Answer */}
+      {/* Answers */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-orange-700">💡 Answers</h2>
+        {question.answers.map((ans, idx) => (
+          <AnswerItem key={ans.id} index={idx + 1} content={ans.content} />
+        ))}
+      </section>
+
+      {/* Future: Submit Your Answer */}
       {/* <AnswerForm /> */}
     </main>
   );
