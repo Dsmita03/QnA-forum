@@ -8,67 +8,45 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { TagInput } from '@/components/TagInput';
 import { useAppStore } from '@/store';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import axios from 'axios';
 
 const AskQuestionPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [showDialog, setShowDialog] = useState(false);
+  const user=useAppStore((state)=>state.user)
+  
+  // Inside your component
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const user = useAppStore((state) => state.user);
-  const { toast } = useToast();
+  if (!title || !description || tags.length === 0) {
+    alert("Please fill in all fields.");
+    return;
+  }
 
-  useEffect(() => {
-    console.log("User", user);
-  }, [user]);
+  try {
+    const questionData = {
+      title,
+      description,
+      tags,
+      userId: user.userId, // your store should have the user with _id
+    };
 
-  const validate = () => {
-    const errorList: string[] = [];
-
-    if (!title.trim()) errorList.push('Title is required.');
-    else if (title.length < 10) errorList.push('Title must be at least 10 characters.');
-
-    if (!description.trim() || description === '<p></p>') errorList.push('Description is required.');
-
-    if (tags.length === 0) errorList.push('Please add at least one tag.');
-
-    setErrors(errorList);
-    setShowDialog(errorList.length > 0);
-
-    return errorList.length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
-    const questionData = { title, description, tags };
-
-    try {
-      console.log('Submitted:', questionData);
-      await new Promise((res) => setTimeout(res, 1000)); // simulate delay
-
-      toast({
-        title: 'Success',
-        description: 'Your question has been posted!',
-      });
-
-      // Clear form
-      setTitle('');
-      setDescription('');
-      setTags([]);
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to post question. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
+    const response = await axios.post("http://localhost:5000/api/questions", questionData, {
+      withCredentials: true, 
+    });
+   if(response.status===201){
+    alert("Question submitted successfully!");
+    setTitle('');
+    setDescription('');
+    setTags([]);
+   }
+  } catch (error) {
+    console.error("❌ Error submitting question:", error);
+    alert("Failed to submit question. Please try again.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4 py-10">

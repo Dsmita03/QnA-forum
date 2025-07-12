@@ -11,53 +11,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link"; // ✅ FIXED: Import Link
+import axios from "axios";
 
-const mockQuestions = [
-  {
-    id: "1",
-    title: "How to use Next.js dynamic routes?",
-    answersCount: 5,
-    tags: ["Next.js", "Routing"],
-    username: "alice123",
-    createdAt: "2024-12-10T10:30:00Z",
-    views: 150,
-  },
-  {
-    id: "2",
-    title: "What is shadcn/ui?",
-    answersCount: 2,
-    tags: ["shadcn", "UI", "React"],
-    username: "bob456",
-    createdAt: "2024-12-12T14:20:00Z",
-    views: 89,
-  },
-  {
-    id: "3",
-    title: "How to implement authentication in React?",
-    answersCount: 8,
-    tags: ["React", "Authentication", "Security"],
-    username: "charlie789",
-    createdAt: "2024-12-08T09:15:00Z",
-    views: 320,
-  },
-  {
-    id: "4",
-    title: "Best practices for TypeScript?",
-    answersCount: 3,
-    tags: ["TypeScript", "Best Practices"],
-    username: "diana101",
-    createdAt: "2024-12-13T16:45:00Z",
-    views: 75,
-  },
-];
+// const mockQuestions = [
+//   {
+//     id: "1",
+//     title: "How to use Next.js dynamic routes?",
+//     answersCount: 5,
+//     tags: ["Next.js", "Routing"],
+//     username: "alice123",
+//     createdAt: "2024-12-10T10:30:00Z",
+//     views: 150,
+//   },
+//   {
+//     id: "2",
+//     title: "What is shadcn/ui?",
+//     answersCount: 2,
+//     tags: ["shadcn", "UI", "React"],
+//     username: "bob456",
+//     createdAt: "2024-12-12T14:20:00Z",
+//     views: 89,
+//   },
+//   {
+//     id: "3",
+//     title: "How to implement authentication in React?",
+//     answersCount: 8,
+//     tags: ["React", "Authentication", "Security"],
+//     username: "charlie789",
+//     createdAt: "2024-12-08T09:15:00Z",
+//     views: 320,
+//   },
+//   {
+//     id: "4",
+//     title: "Best practices for TypeScript?",
+//     answersCount: 3,
+//     tags: ["TypeScript", "Best Practices"],
+//     username: "diana101",
+//     createdAt: "2024-12-13T16:45:00Z",
+//     views: 75,
+//   },
+// ];
 
 export default function Home() {
-  const [questions] = useState(mockQuestions);
+  const [questions,setQuestions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
+  
 
+  useEffect(() => {
+  const fetchQuestions = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/questions");
+      // Format backend response to match your mock shape
+      const formatted = res.data.map((q: any) => ({
+        id: q._id,
+        title: q.title,
+        answersCount: q.answers ? q.answers.length : 0, // if you populate answers later
+        tags: q.tags || [],
+        username: q.user?.username || "anonymous", // if you populate user with username
+        createdAt: q.createdAt,
+        views: q.views || 0, // default if not in schema
+      }));
+      setQuestions(formatted);
+    } catch (err) {
+      console.error("❌ Failed to fetch questions:", err);
+    }
+  };
+
+  fetchQuestions();
+}, []);
   // Filter questions based on search term
   const filteredQuestions = questions.filter(question => {
     if (!searchTerm.trim()) return true;
