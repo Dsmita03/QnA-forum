@@ -47,8 +47,4 @@ A minimalist, modern Q&A platform built with **Next.js 14**, **Tailwind CSS**, *
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
----
-
-## 📄 License
-
-MIT License © 2025 [Raktim Mitra](https://github.com/Raktim-Mitra)
+ 
