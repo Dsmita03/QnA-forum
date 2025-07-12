@@ -9,44 +9,74 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { TagInput } from '@/components/TagInput';
 import { useAppStore } from '@/store';
 import axios from 'axios';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const AskQuestionPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const user=useAppStore((state)=>state.user)
-  
-  // Inside your component
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const [errors, setErrors] = useState<string[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
 
-  if (!title || !description || tags.length === 0) {
-    alert("Please fill in all fields.");
-    return;
-  }
+  const user = useAppStore((state) => state.user);
 
-  try {
-    const questionData = {
-      title,
-      description,
-      tags,
-      userId: user.userId, // your store should have the user with _id
-    };
+  useEffect(() => {
+    console.log('User', user);
+  }, [user]);
 
-    const response = await axios.post("http://localhost:5000/api/questions", questionData, {
-      withCredentials: true, 
-    });
-   if(response.status===201){
-    alert("Question submitted successfully!");
-    setTitle('');
-    setDescription('');
-    setTags([]);
-   }
-  } catch (error) {
-    console.error("❌ Error submitting question:", error);
-    alert("Failed to submit question. Please try again.");
-  }
-};
+  const validateFields = () => {
+    const issues: string[] = [];
+
+    if (!title.trim()) issues.push('Title is required.');
+    else if (title.length < 10) issues.push('Title must be at least 10 characters.');
+
+    if (!description.trim() || description === '<p></p>') issues.push('Description is required.');
+
+    if (tags.length === 0) issues.push('At least one tag is required.');
+
+    setErrors(issues);
+    setShowDialog(issues.length > 0);
+
+    return issues.length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateFields()) return;
+
+    try {
+      const questionData = {
+        title,
+        description,
+        tags,
+        userId: user?.userId,
+      };
+
+      const response = await axios.post('http://localhost:5000/api/questions', questionData, {
+        withCredentials: true,
+      });
+
+      if (response.status === 201) {
+        setTitle('');
+        setDescription('');
+        setTags([]);
+        alert('✅ Question submitted successfully!');
+      }
+    } catch (error: any) {
+      console.error('❌ Error submitting question:', error);
+      setErrors([
+        error?.response?.data?.message || 'Failed to submit question. Please try again.',
+      ]);
+      setShowDialog(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4 py-10">
@@ -90,15 +120,15 @@ const handleSubmit = async (e: React.FormEvent) => {
         </CardContent>
       </Card>
 
-      {/* Validation Dialog */}
+      {/* Error Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">Validation Errors</DialogTitle>
+            <DialogTitle className="text-red-600">Something went wrong</DialogTitle>
           </DialogHeader>
           <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-            {errors.map((error, idx) => (
-              <li key={idx}>{error}</li>
+            {errors.map((err, idx) => (
+              <li key={idx}>{err}</li>
             ))}
           </ul>
           <DialogFooter>
