@@ -1,11 +1,12 @@
 // backend/index.js
 
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const mongoose = require("mongoose");
 
-// Load environment variables
+
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+
 dotenv.config();
 
 // Initialize app
@@ -23,14 +24,14 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // ROUTES
-const questionRoutes = require("./routes/questionRoutes");
-const answerRoutes = require("./routes/answerRoutes");
-const commentRoutes = require("./routes/commentRoutes");
+import questionrouter from "./routes/questionRoutes";
+import answerrouter from "./routes/answerRoutes";
+import commentRouter from "./routes/commentRoutes";
 
 // Mount routes
-app.use("/api/questions", questionRoutes);
-app.use("/api/answers", answerRoutes);
-app.use("/api/comments", commentRoutes);
+app.use("/api/questions", questionrouter);
+app.use("/api/answers", answerrouter);
+app.use("/api/comments", commentRouter);
 
 // Root test route
 app.get("/", (req, res) => {
