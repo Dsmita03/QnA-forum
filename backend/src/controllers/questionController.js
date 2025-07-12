@@ -1,4 +1,4 @@
-const Question = require("../models/Question");
+import Question from "../models/Question";
 
 exports.createQuestion = async (req, res) => {
   const { title, description, tags } = req.body;

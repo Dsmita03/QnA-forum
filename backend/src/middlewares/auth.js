@@ -1,4 +1,4 @@
-const admin = require("../config/firebase");
+import admin from "../config/firebase";
 
 async function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split("Bearer ")[1];
