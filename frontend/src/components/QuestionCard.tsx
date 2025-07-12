@@ -69,11 +69,11 @@ export default function QuestionCard({
           {/* Footer */}
           <div className="flex justify-between items-center text-sm text-gray-500 mt-2">
             <div>
-              Posted by <span className="font-medium">@{username}</span>
+              Posted by <span className="font-medium">{username}</span>
               {createdAt && (
                 <span className="ml-2">• {formatDate(createdAt)}</span>
               )}
-            </div>
+            </div>@
             {views !== undefined && (
               <div className="flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
