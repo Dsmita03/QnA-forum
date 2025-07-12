@@ -13,7 +13,10 @@ export default function AnswerItem({ index, content }: Props) {
         <span className="text-sm text-orange-600 font-medium">#{index}</span>
       </div>
 
-      <p className="text-gray-700 leading-relaxed">{content}</p>
+      <div 
+        className="text-gray-700 leading-relaxed answer-content"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
     </div>
   );
 }

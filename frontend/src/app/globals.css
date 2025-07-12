@@ -274,3 +274,86 @@
   border-radius: 2px;
 }
 
+/* Answer Content Styles */
+.answer-content ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  padding-left: 0;
+  margin: 0.5rem 0;
+}
+
+.answer-content ol {
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+  padding-left: 0;
+  margin: 0.5rem 0;
+}
+
+.answer-content li {
+  margin: 0.25rem 0;
+  padding-left: 0.25rem;
+}
+
+.answer-content ul ul {
+  list-style-type: circle;
+}
+
+.answer-content ul ul ul {
+  list-style-type: square;
+}
+
+.answer-content p {
+  margin: 0.5rem 0;
+}
+
+.answer-content p:first-child {
+  margin-top: 0;
+}
+
+.answer-content p:last-child {
+  margin-bottom: 0;
+}
+
+.answer-content strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+.answer-content em {
+  font-style: italic;
+}
+
+.answer-content a {
+  color: #ea580c;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.answer-content a:hover {
+  color: #c2410c;
+}
+
+.answer-content code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875em;
+}
+
+.answer-content pre {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.answer-content blockquote {
+  border-left: 4px solid #fed7aa;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
