@@ -6,7 +6,7 @@ import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useNavigate } from "react-router";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store";
 
 export default function Signup() {
@@ -15,7 +15,7 @@ export default function Signup() {
     const [role, setRole] = useState("user");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    // const router = useRouter();
+    const router = useRouter();
     const setUser = useAppStore((state) => state.setUser);
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,11 +39,11 @@ export default function Signup() {
                 console.log(res.data);
                 const data=res.data.user
                 setUser({
-                    userId: data._id,
+                    userId: data.id,
                     role: data.role,
                     isLoggedIn: true,
                 })
-                // router.push("/");
+                router.push("/");
             }
         } catch (err: any) {
             console.error(err);
