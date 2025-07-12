@@ -25,14 +25,24 @@ export const createQuestion = async (req, res) => {
 };
 
 
+
+
 export const getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find().sort({ createdAt: -1 });
-    res.json(questions);
+    const questions = await Question.find()
+      .populate({
+        path: "user",      // 🔑 this matches the `user` field in your Question schema
+        select: "email",   // ✅ only get the `email` field from User
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(questions);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 };
+
 
 export const voteQuestion = async (req, res) => {
   const { id } = req.params;

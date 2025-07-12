@@ -64,13 +64,14 @@ export default function Home() {
   const fetchQuestions = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/questions");
+      console.log(res.data);
       // Format backend response to match your mock shape
       const formatted = res.data.map((q: any) => ({
         id: q._id,
         title: q.title,
         answersCount: q.answers ? q.answers.length : 0, // if you populate answers later
         tags: q.tags || [],
-        username: q.user?.username || "anonymous", // if you populate user with username
+        username: q.user.email || "anonymous", // if you populate user with username
         createdAt: q.createdAt,
         views: q.views || 0, // default if not in schema
       }));
