@@ -43,13 +43,13 @@ export default function Navbar() {
           >
             Home
           </Link>
-         <Link
-          href="/add-questions"
-         className={pathname === "/add-questions" ? "text-orange-500" : "hover:text-orange-500"}
-        >
-         Ask
-         </Link>
-          </div>
+          <Link
+            href="/add-questions"
+            className={pathname === "/add-questions" ? "text-orange-500" : "hover:text-orange-500"}
+          >
+            Ask
+          </Link>
+        </div>
 
         {/* Notifications and Profile */}
         <div className="flex items-center gap-4 relative">
@@ -89,10 +89,18 @@ export default function Navbar() {
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 bg-white shadow-md rounded-md text-sm z-50">
-                <Link href="/profile" className="block px-4 py-2 hover:bg-gray-50">
-                  Profile
-                </Link>
+              <div className="absolute right-0 mt-2 bg-white shadow-md rounded-md text-sm z-50 w-48">
+                {/* Profile Picture */}
+                <div className="flex flex-col items-center justify-center py-4 border-b">
+                  <Image
+                    src="/profile.png"
+                    alt="Profile Large"
+                    width={64}
+                    height={64}
+                    className="rounded-full"
+                  />
+                  <p className="text-gray-800 text-sm mt-2 font-medium">Lily</p>
+                </div>
                 <Link href="/admin" className="block px-4 py-2 hover:bg-gray-50">
                   Admin Panel
                 </Link>
