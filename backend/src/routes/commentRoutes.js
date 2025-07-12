@@ -1,8 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middlewares/auth");
-const controller = require("../controllers/commentController");
+import express from "express";
+import verifyToken from "../middlewares/auth.js";
+import { addComment } from "../controllers/commentController.js";
 
-router.post("/", auth, controller.addComment);
+const commentRouter = express.Router();
 
-module.exports = router;
+commentRouter.post("/", verifyToken, addComment);
+
+export default commentRouter;

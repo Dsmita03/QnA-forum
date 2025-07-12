@@ -1,7 +1,7 @@
-const Answer = require("../models/Answer");
-const Question = require("../models/Question");
 
-exports.addAnswer = async (req, res) => {
+import {Answer} from "../models/Answer";
+import {Question} from "../models/Question";
+export const addAnswer = async (req, res) => {
   const { content, questionId } = req.body;
   try {
     const answer = await Answer.create({ content, questionId, userId: req.user.uid });
@@ -11,7 +11,7 @@ exports.addAnswer = async (req, res) => {
   }
 };
 
-exports.voteAnswer = async (req, res) => {
+export const voteAnswer = async (req, res) => {
   const { id } = req.params;
   const { type } = req.body;
   try {
@@ -24,7 +24,7 @@ exports.voteAnswer = async (req, res) => {
   }
 };
 
-exports.acceptAnswer = async (req, res) => {
+export const acceptAnswer = async (req, res) => {
   const { answerId, questionId } = req.body;
   try {
     const question = await Question.findById(questionId);

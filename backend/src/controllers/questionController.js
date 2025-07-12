@@ -1,6 +1,6 @@
-const Question = require("../models/Question");
+import {Question}from "../models/Question";
 
-exports.createQuestion = async (req, res) => {
+export const createQuestion = async (req, res) => {
   const { title, description, tags } = req.body;
   try {
     const question = await Question.create({ title, description, tags, userId: req.user.uid });
@@ -10,7 +10,7 @@ exports.createQuestion = async (req, res) => {
   }
 };
 
-exports.getAllQuestions = async (req, res) => {
+export const getAllQuestions = async (req, res) => {
   try {
     const questions = await Question.find().sort({ createdAt: -1 });
     res.json(questions);
@@ -19,7 +19,7 @@ exports.getAllQuestions = async (req, res) => {
   }
 };
 
-exports.voteQuestion = async (req, res) => {
+export const voteQuestion = async (req, res) => {
   const { id } = req.params;
   const { type } = req.body; // up or down
   try {
