@@ -2,9 +2,9 @@
 import {Answer} from "../models/Answer.js";
 import {Question} from "../models/Question.js";
 export const addAnswer = async (req, res) => {
-  const { content, questionId } = req.body;
+  const { content, questionId, userId } = req.body;
   try {
-    const answer = await Answer.create({ content, questionId, userId: req.user.uid });
+    const answer = await Answer.create({questionId, content, user: userId});
     res.status(201).json(answer);
   } catch (err) {
     res.status(500).json({ error: "Failed to post answer" });

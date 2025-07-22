@@ -1,125 +1,139 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Breadcrumb from "@/components/Breadcrumb";
 import AnswerItem from "@/components/AnswerItem";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import axios from "axios";
 
-const mockQuestion = {
-  id: "1",
-  title: "How to use dynamic routing in Next.js?",
-  description:
-    "I am trying to understand how dynamic routes work in Next.js App Router. Can someone explain with an example?",
-  tags: ["Next.js", "Routing", "App Router"],
-  answers: [
-    {
-      id: "a1",
-      content:
-        "You can create a folder with [id]/page.tsx inside your /app folder. Next.js will automatically handle the dynamic routing for you.",
-    },
-    {
-      id: "a2",
-      content:
-        "Check out the official docs too — they have great examples! You can also use generateStaticParams for SSG.",
-    },
-  ],
-};
-
+interface Question {
+    _id: string;
+    title: string;
+    description: string;
+    tags: string[];
+    answers: any[]; // You can define an Answer type if needed
+}
 interface Props {
-  params: { id: string };
+    params: { id: string };
 }
 
 export default function QuestionPage({ params }: Props) {
-  const question = mockQuestion;
-  const [answers, setAnswers] = useState(question.answers);
-  const [newAnswer, setNewAnswer] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [validationError, setValidationError] = useState('');
+    const [question, setQuestion] = useState<Question | null>(null);
+    const [answers, setAnswers] = useState([]);
+    const [newAnswer, setNewAnswer] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [validationError, setValidationError] = useState('');
 
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [showModal]);
+    //Prevent background scroll when modal is open
+    useEffect(() => {
+      if (showModal) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }, [showModal]);
 
-  const validateAnswerContent = (content: string): boolean => {
-    const stripped = content.replace(/<[^>]*>/g, '').trim();
+    useEffect(() => {
+        const getQuestionbyId = async () => {
+            const { id } = params;
+            const response = await axios.get(
+                `http://localhost:5000/api/questions/${id}`
+            );
+            console.log(response.data);
+            setQuestion(response.data);
+        };
+        getQuestionbyId();
+    }, []);
 
-    if (!stripped) {
-      setValidationError('Please add some text content to your answer.');
-      return false;
-    }
-    if (stripped.length < 10) {
-      setValidationError('Answer must be at least 10 characters long.');
-      return false;
-    }
+    const validateAnswerContent = (content: string): boolean => {
+      const stripped = content.replace(/<[^>]*>/g, '').trim();
 
-    setValidationError('');
-    return true;
-  };
+      if (!stripped) {
+        setValidationError('Please add some text content to your answer.');
+        return false;
+      }
+      if (stripped.length < 10) {
+        setValidationError('Answer must be at least 10 characters long.');
+        return false;
+      }
 
-  const handleSubmit = async () => {
-    if (!validateAnswerContent(newAnswer)) return;
+      setValidationError('');
+      return true;
+    };
 
-    setIsSubmitting(true);
+    const handleSubmit = async () => {
+      if (!validateAnswerContent(newAnswer)) return;
 
-    // Simulated API call
-    setTimeout(() => {
-      const newAns = {
-        id: `a${answers.length + 1}`,
-        content: newAnswer,
-        author: "Current User",
-        timestamp: new Date().toISOString(),
-      };
+      setIsSubmitting(true);
 
-      setAnswers(prev => [...prev, newAns]);
-      setNewAnswer('');
+      // Simulated API call
+      setTimeout(() => {
+        const newAns = {
+          id: `a${answers.length + 1}`,
+          content: newAnswer,
+          author: "Current User",
+          timestamp: new Date().toISOString(),
+        };
+
+        setAnswers(prev => [...prev, newAns]);
+        setNewAnswer('');
+        setShowModal(false);
+        setIsSubmitting(false);
+        toast.success('Answer posted successfully!');
+      }, 1000);
+    };
+
+    const handleCancel = () => {
       setShowModal(false);
-      setIsSubmitting(false);
-      toast.success('Answer posted successfully!');
-    }, 1000);
-  };
+      setNewAnswer('');
+      setValidationError('');
+    };
+    if (!question) {
+        return (
+            <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 min-h-screen">
+                <p className="text-center text-gray-500">Loading question...</p>
+            </main>
+        );
+    }
+    return (
+        <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] min-h-screen rounded-xl shadow-sm">
+            <Breadcrumb
+                items={[
+                    { label: "Home", href: "/" },
+                    { label: "Questions", href: "/" },
+                    { label: question.title },
+                ]}
+            />
 
-  const handleCancel = () => {
-    setShowModal(false);
-    setNewAnswer('');
-    setValidationError('');
-  };
+            <h1 className="text-3xl font-bold text-gray-800">
+                {question.title}
+            </h1>
 
-  return (
-    <main className="max-w-4xl mx-auto px-6 py-10 space-y-8 bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] min-h-screen rounded-xl shadow-sm">
-      <Breadcrumb
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Questions", href: "/" },
-          { label: question.title },
-        ]}
-      />
+            <div className="flex flex-wrap gap-2">
+                {question.tags.map((tag) => (
+                    <Badge
+                        key={tag}
+                        className="bg-orange-100 text-orange-700 border border-orange-200"
+                    >
+                        {tag}
+                    </Badge>
+                ))}
+            </div>
 
-      <h1 className="text-3xl font-bold text-gray-800">{question.title}</h1>
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <div
+                    className="text-gray-700 text-base leading-relaxed prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: question.description }}
+                />
+            </div>
 
-      <div className="flex flex-wrap gap-2">
-        {question.tags.map((tag) => (
-          <Badge key={tag} className="bg-orange-100 text-orange-700 border border-orange-200">
-            {tag}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-        <p className="text-gray-700 text-base leading-relaxed">{question.description}</p>
-      </div>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
+            <section className="space-y-4">
+                <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-orange-700">💡 Answers ({answers.length})</h2>
           <Button
             onClick={() => setShowModal(true)}
@@ -129,11 +143,11 @@ export default function QuestionPage({ params }: Props) {
           </Button>
         </div>
 
-        {answers.map((ans, idx) => (
+                {/* {answers.map((ans, idx) => (
           <AnswerItem key={ans.id} index={idx + 1} content={ans.content} />
-        ))}
+        ))} */}
 
-        {answers.length === 0 && (
+                {answers.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
             <p className="text-gray-500 text-lg">No answers yet. Be the first to answer!</p>
             <Button
@@ -144,10 +158,10 @@ export default function QuestionPage({ params }: Props) {
             </Button>
           </div>
         )}
-      </section>
+            </section>
 
-      {/* Answer Modal */}
-      {showModal && (
+            {/* Answer Modal */}
+            {showModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100">
@@ -221,6 +235,6 @@ export default function QuestionPage({ params }: Props) {
           </div>
         </div>
       )}
-    </main>
-  );
+        </main>
+    );
 }

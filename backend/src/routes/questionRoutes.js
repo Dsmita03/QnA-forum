@@ -3,6 +3,7 @@ import express from "express";
 import {
   createQuestion,
   getAllQuestions,
+  getQuestionById,
   voteQuestion
 } from "../controllers/questionController.js";
 
@@ -12,6 +13,7 @@ questionrouter.post("/",
   // verifyToken,
    createQuestion);
 questionrouter.get("/", getAllQuestions);
+questionrouter.get("/:id",getQuestionById);
 questionrouter.post("/vote/:id",
   //  verifyToken, 
    voteQuestion);
