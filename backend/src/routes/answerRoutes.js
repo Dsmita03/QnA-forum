@@ -4,6 +4,7 @@ import {
   addAnswer,
   voteAnswer,
   acceptAnswer,
+  getAnswerByQuestionId,
 } from "../controllers/answerController.js";
 
 const answerrouter = express.Router();
@@ -17,5 +18,6 @@ answerrouter.post("/vote/:id",
 answerrouter.post("/accept", 
   // verifyToken,
    acceptAnswer);
+answerrouter.get("/:questionId", getAnswerByQuestionId);   
 
 export default answerrouter;

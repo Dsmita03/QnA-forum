@@ -2,7 +2,8 @@
 import {Answer} from "../models/Answer.js";
 import {Question} from "../models/Question.js";
 export const addAnswer = async (req, res) => {
-  const { content, questionId, userId } = req.body;
+  
+  const { questionId,content, userId } = req.body;
   try {
     const answer = await Answer.create({questionId, content, user: userId});
     res.status(201).json(answer);
@@ -37,3 +38,15 @@ export const acceptAnswer = async (req, res) => {
     res.status(500).json({ error: "Failed to accept answer" });
   }
 };
+
+//get answers by question id
+
+export const getAnswerByQuestionId=async (req, res) => {
+  const { questionId } = req.params;
+  try {
+    const answers = await Answer.find({ questionId });
+    res.status(200).json(answers);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch answers" });
+  }
+}

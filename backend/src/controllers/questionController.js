@@ -62,7 +62,6 @@ export const getQuestionById = async (req, res) => {
   const { id } = req.params;
   try {
     const question = await Question.findById(id);
-    console.log(question);
     res.status(200).json(question);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch question" });
