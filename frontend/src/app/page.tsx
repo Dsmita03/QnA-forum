@@ -56,9 +56,9 @@ export default function Home() {
                     "http://localhost:5001/api/answers/count"
                 );
                 console.log("🔹 Answer count:", res.data);
-                setTotalAnswers(res.data); // 👈 assuming { count: number }
+                setTotalAnswers(res.data); // assuming { count: number }
             } catch (err) {
-                console.error("❌ Failed to fetch answers:", err);
+                console.error(" Failed to fetch answers:", err);
             }
         };
 
@@ -71,10 +71,10 @@ export default function Home() {
                 const res = await axios.get(
                     "http://localhost:5001/api/auth/count"
                 );
-                console.log("🔹 User count:", res.data);
-                setTotalUsers(res.data); // 👈 assuming { count: number }
+                console.log("User count:", res.data);
+                setTotalUsers(res.data.count); // assuming { count: number }
             } catch (err) {
-                console.error("❌ Failed to fetch users:", err);
+                console.error("Failed to fetch users:", err);
             }
         };
 
@@ -109,12 +109,12 @@ export default function Home() {
 
                 setStats({
                     totalQuestions: formatted.length,
-                    totalAnswers, // 👈 use from API
-                    totalUsers: totalUsers,
+                    totalAnswers, //  use from API
+                    totalUsers,
                     todayQuestions,
                 });
             } catch (err) {
-                console.error("❌ Failed to fetch questions:", err);
+                console.error(" Failed to fetch questions:", err);
             } finally {
                 setLoading(false);
             }
@@ -125,7 +125,7 @@ export default function Home() {
             // if you want to run this regardless of count being 0 or more
             fetchQuestions();
         }
-    }, [totalAnswers]); // 👈 dependency
+    }, [totalAnswers,totalUsers]); // dependency
 
     // Filter questions based on search term
     const filteredQuestions = questions.filter((question) => {

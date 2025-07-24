@@ -114,12 +114,14 @@ export const login = async (req, res) => {
 
 export const getTotalNoOfUsers = async (req, res) => {
   try {
-    const users = await User.find({});
-    res.status(200).json(users.length);
+    const count = await User.countDocuments();  
+    res.status(200).json({ count });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch users" });
+    res.status(500).json({ error: "Failed to fetch user count" });
   }
-}
+};
+
+
 
 // export const getUserById = async (req, res) => {
 //   console.log(req.user);
