@@ -20,9 +20,46 @@ const userSchema = new mongoose.Schema(
       enum: ['guest', 'user', 'admin'],
       default: 'user',
     },
+    name: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    profession: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bio: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    avatar: {
+      type: String,
+      default: '', // URL or base64 string
+    },
+    coverImage: {
+      type: String,
+      default: '', // URL or base64 string
+    },
+    websiteLink: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    rankings: {
+      type: String,
+      default: '0',
+    },
   },
   {
-    timestamps: true, // adds createdAt & updatedAt
+    timestamps: true, // createdAt will be used as joinedDate
   }
 );
 

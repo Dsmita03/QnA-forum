@@ -6,7 +6,7 @@ import questionrouter from "./routes/questionRoutes.js";
 import answerrouter from "./routes/answerRoutes.js";
 import commentRouter from "./routes/commentRoutes.js";
 import authRouter from "./routes/authRoutes.js";
-
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
@@ -21,7 +21,8 @@ app.use(cors({
 // app.use(cors());
 // ✅ Middleware
 app.use(express.json());
-
+//cookie-parser
+app.use(cookieParser());
 // ✅ MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))

@@ -34,23 +34,21 @@ export const signup = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'User already exists.' });
     }
-
-    // Hash password
     const hashed = await bcrypt.hash(password, 12);
-
-    // Create user
     const user = await User.create({
       email,
       password: hashed,
-      role: role || 'user', // default to user
+      role: role || 'user',
     });
-
-    // Token
     const token = generateToken(user);
-
-    res.status(201).json({
+      res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // true in production
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+     res.status(201).json({
       message: 'User created successfully!',
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -90,9 +88,15 @@ export const login = async (req, res) => {
     // Token
     const token = generateToken(user);
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       message: 'Logged in successfully!',
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -111,5 +115,17 @@ export const getTotalNoOfUsers = async (req, res) => {
     res.status(200).json(users.length);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
+  }
+}
+
+export const getUserById = async (req, res) => {
+  console.log(req.user);
+  const id = req.user.id;
+  console.log(id);
+  try {
+    const user = await User.findById(id);
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 }

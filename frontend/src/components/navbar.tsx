@@ -5,10 +5,12 @@ import Image from "next/image";
 import { Bell, LogOut, Menu, X, User, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useAppStore } from "@/store";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const user=useAppStore(state => state.user);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -113,8 +115,8 @@ export default function Navbar() {
                 <Image src="/profile.png" alt="Profile" width={32} height={32} className="w-full h-full object-cover" />
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-800">Lily</p>
-                <p className="text-xs text-gray-500">Developer</p>
+                <p className="text-sm font-medium text-gray-800">{user.userId}</p>
+                <p className="text-xs text-gray-500">{user.role}</p>
               </div>
             </button>
 
