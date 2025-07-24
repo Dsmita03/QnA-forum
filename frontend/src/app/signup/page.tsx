@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
 import axios from "axios";
 import Image from "next/image";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { useNavigate } from "react-router";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store";
 
@@ -17,6 +16,7 @@ export default function Signup() {
     const [error, setError] = useState("");
     const router = useRouter();
     const setUser = useAppStore((state) => state.setUser);
+    
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -37,12 +37,12 @@ export default function Signup() {
 
             if (res.status === 201) {
                 console.log(res.data);
-                const data=res.data.user
+                const data = res.data.user;
                 setUser({
                     userId: data.id,
                     role: data.role,
                     isLoggedIn: true,
-                })
+                });
                 router.push("/");
             }
         } catch (err: any) {
@@ -54,92 +54,113 @@ export default function Signup() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] px-4">
-            <div className="flex flex-col md:flex-row items-center max-w-4xl bg-white shadow-md rounded-2xl overflow-hidden w-full">
-                {/* Illustration */}
-                <div className="hidden md:flex flex-col justify-center items-center p-8 bg-white">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 px-4 py-8">
+            <div className="flex flex-col lg:flex-row items-center max-w-5xl bg-white shadow-2xl rounded-3xl overflow-hidden w-full">
+                {/* Illustration Section */}
+                <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-gradient-to-br from-orange-500 to-amber-600 text-white lg:w-1/2">
                     <Image
                         src="/illustration.png"
                         alt="Illustration"
-                        width={250}
-                        height={250}
+                        width={300}
+                        height={300}
+                        className="mb-6"
                     />
+                    <h3 className="text-2xl font-bold mb-2">Welcome to StackIt</h3>
+                    <p className="text-orange-100 text-center text-sm">
+                        Join our community and start building amazing things together
+                    </p>
                 </div>
 
-                {/* Form */}
-                <div className="flex-1 p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800">
-                        StackIt
-                    </h2>
-                    <p className="text-sm text-gray-500 mb-6">
-                        Please sign up to continue
-                    </p>
+                {/* Form Section */}
+                <div className="flex-1 p-8 lg:p-12 lg:w-1/2">
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                            Create Account
+                        </h2>
+                        <p className="text-gray-600">
+                            Please fill in your details to get started
+                        </p>
+                    </div>
 
                     <form
-                        className="flex flex-col space-y-4"
+                        className="space-y-6"
                         onSubmit={handleSignup}
                     >
-                        <input
-                            type="email"
-                            placeholder="Your Email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="border px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
-                        />
-                        <input
-                            type="password"
-                            placeholder="Your Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="border px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
-                        />
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-700">
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200"
+                            />
+                        </div>
 
-                        {/* Role Selection */}
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="border px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-700"
-                        >
-                            <option value="guest">Guest</option>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-700">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Create a password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-700">
+                                Account Type
+                            </label>
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 text-gray-700 bg-white"
+                            >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                {error}
+                            </div>
+                        )}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-orange-500 text-white py-3 rounded-md hover:bg-orange-600 transition disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         >
-                            {loading ? "Signing up..." : "Sign Up"}
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-spin w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mr-2"></div>
+                                    Creating Account...
+                                </div>
+                            ) : (
+                                "Create Account"
+                            )}
                         </button>
                     </form>
 
-                    {error && (
-                        <p className="text-sm text-red-500 mt-2">{error}</p>
-                    )}
-
-                    <div className="my-4 flex items-center justify-center">
-                        <div className="border-t w-full mr-2"></div>
-                        <span className="text-gray-400">or</span>
-                        <div className="border-t w-full ml-2"></div>
+                    <div className="mt-8 text-center">
+                        <p className="text-gray-600">
+                            Already have an account?{" "}
+                            <Link
+                                href="/login"
+                                className="text-orange-600 hover:text-orange-700 font-medium hover:underline transition-colors"
+                            >
+                                Sign in here
+                            </Link>
+                        </p>
                     </div>
-
-                    <button className="flex items-center justify-center gap-3 border py-3 w-full rounded-md hover:bg-gray-50 transition">
-                        <FcGoogle size={20} />
-                        <span>Continue with Google</span>
-                    </button>
-
-                    <p className="text-sm text-center mt-6">
-                        Already have an account?{" "}
-                        <Link
-                            href="/login"
-                            className="text-orange-500 hover:underline"
-                        >
-                            Login
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import Navbar from "@/components/navbar";
@@ -12,77 +13,74 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import Link from "next/link"; // ✅ FIXED: Import Link
+import Link from "next/link";
 import axios from "axios";
+import { Search, Plus, Filter, TrendingUp, Clock, Eye, MessageSquare, Users } from "lucide-react";
 
-// const mockQuestions = [
-//   {
-//     id: "1",
-//     title: "How to use Next.js dynamic routes?",
-//     answersCount: 5,
-//     tags: ["Next.js", "Routing"],
-//     username: "alice123",
-//     createdAt: "2024-12-10T10:30:00Z",
-//     views: 150,
-//   },
-//   {
-//     id: "2",
-//     title: "What is shadcn/ui?",
-//     answersCount: 2,
-//     tags: ["shadcn", "UI", "React"],
-//     username: "bob456",
-//     createdAt: "2024-12-12T14:20:00Z",
-//     views: 89,
-//   },
-//   {
-//     id: "3",
-//     title: "How to implement authentication in React?",
-//     answersCount: 8,
-//     tags: ["React", "Authentication", "Security"],
-//     username: "charlie789",
-//     createdAt: "2024-12-08T09:15:00Z",
-//     views: 320,
-//   },
-//   {
-//     id: "4",
-//     title: "Best practices for TypeScript?",
-//     answersCount: 3,
-//     tags: ["TypeScript", "Best Practices"],
-//     username: "diana101",
-//     createdAt: "2024-12-13T16:45:00Z",
-//     views: 75,
-//   },
-// ];
+type Question = {
+  id: string;
+  title: string;
+  answersCount: number;
+  tags: string[];
+  username: string;
+  createdAt: string;
+  views: number;
+};
 
 export default function Home() {
-  const [questions,setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
-  
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalQuestions: 0,
+    totalAnswers: 0,
+    totalUsers: 0,
+    todayQuestions: 0
+  });
 
   useEffect(() => {
-  const fetchQuestions = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/questions");
-      console.log(res.data);
-      // Format backend response to match your mock shape
-      const formatted = res.data.map((q: any) => ({
-        id: q._id,
-        title: q.title,
-        answersCount: q.answers ? q.answers.length : 0, // if you populate answers later
-        tags: q.tags || [],
-        username: q.user.email || "anonymous", // if you populate user with username
-        createdAt: q.createdAt,
-        views: q.views || 0, // default if not in schema
-      }));
-      setQuestions(formatted);
-    } catch (err) {
-      console.error("❌ Failed to fetch questions:", err);
-    }
-  };
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get("http://localhost:5000/api/questions");
+        console.log(res.data);
+        
+        // Format backend response to match your mock shape
+        const formatted = res.data.map((q: any) => ({
+          id: q._id,
+          title: q.title,
+          answersCount: q.answers ? q.answers.length : 0,
+          tags: q.tags || [],
+          username: q.user.email || "anonymous",
+          createdAt: q.createdAt,
+          views: q.views || 0,
+        }));
+        
+        setQuestions(formatted);
+        
+        // Calculate stats
+        const totalAnswers = formatted.reduce((sum: any, q: { answersCount: any; }) => sum + q.answersCount, 0);
+        const todayQuestions = formatted.filter((q: { createdAt: string | number | Date; }) => 
+          new Date(q.createdAt).toDateString() === new Date().toDateString()
+        ).length;
+        
+        setStats({
+          totalQuestions: formatted.length,
+          totalAnswers,
+          totalUsers: new Set(formatted.map((q: { username: any; }) => q.username)).size,
+          todayQuestions
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch questions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchQuestions();
-}, []);
+    fetchQuestions();
+  }, []);
+
   // Filter questions based on search term
   const filteredQuestions = questions.filter(question => {
     if (!searchTerm.trim()) return true;
@@ -99,85 +97,164 @@ export default function Home() {
   const sortedQuestions = [...filteredQuestions].sort((a, b) => {
     switch (sortBy) {
       case 'popular':
-        // Sort by answer count (descending)
         return b.answersCount - a.answersCount;
-      
       case 'newest':
-        // Sort by creation date (newest first)
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      
       case 'oldest':
-        // Sort by creation date (oldest first)
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      
       case 'most-viewed':
-        // Sort by view count (descending)
         return b.views - a.views;
-      
       case 'alphabetical':
-        // Sort by title alphabetically
         return a.title.localeCompare(b.title);
-      
       case 'unanswered':
-        // Show unanswered questions first
         if (a.answersCount === 0 && b.answersCount > 0) return -1;
         if (a.answersCount > 0 && b.answersCount === 0) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      
-      default: // 'latest'
-        // Default to newest first
+      default:
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
+
+  const sortOptions = [
+    { value: 'latest', label: 'Latest', icon: Clock },
+    { value: 'newest', label: 'Newest', icon: TrendingUp },
+    { value: 'oldest', label: 'Oldest', icon: Clock },
+    { value: 'popular', label: 'Most Popular', icon: TrendingUp },
+    { value: 'most-viewed', label: 'Most Viewed', icon: Eye },
+    { value: 'alphabetical', label: 'A-Z', icon: Filter },
+    { value: 'unanswered', label: 'Unanswered', icon: MessageSquare },
+  ];
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 py-12 min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading questions...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-12 space-y-10 bg-gradient-to-br from-[#fcfcfc] to-[#f0f4ff] min-h-screen">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 min-h-screen">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalQuestions}</p>
+                <p className="text-sm text-gray-600">Questions</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalAnswers}</p>
+                <p className="text-sm text-gray-600">Answers</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalUsers}</p>
+                <p className="text-sm text-gray-600">Users</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-800">{stats.todayQuestions}</p>
+                <p className="text-sm text-gray-600">Today</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Page Header */}
-        <header className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-800">
-            🧠 Explore Questions
-          </h1>
+        <header className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Explore Questions
+              </h1>
+              <p className="text-gray-600">
+                Discover knowledge, ask questions, and share your expertise with the community
+              </p>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48 bg-white shadow-md rounded-md">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">📅 Latest</SelectItem>
-                <SelectItem value="newest">🆕 Newest</SelectItem>
-                <SelectItem value="oldest">⏰ Oldest</SelectItem>
-                <SelectItem value="popular">🔥 Most Popular</SelectItem>
-                <SelectItem value="most-viewed">👁️ Most Viewed</SelectItem>
-                <SelectItem value="alphabetical">🔤 A-Z</SelectItem>
-                <SelectItem value="unanswered">❓ Unanswered</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search questions, tags, or users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full sm:w-80 bg-white border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 rounded-xl"
+                />
+              </div>
 
-            <Input
-              placeholder="Search by keywords..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-72 bg-white shadow-md rounded-md"
-            />
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-48 bg-white border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 rounded-xl">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {sortOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value} className="rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <IconComponent className="w-4 h-4" />
+                          <span>{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
 
-            <Link href="/add-questions">
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 shadow-md">
-                Ask Question
-              </Button>
-            </Link>
+              <Link href="/add-questions">
+                <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 rounded-xl">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ask Question
+                </Button>
+              </Link>
+            </div>
           </div>
         </header>
 
-        {/* Questions Section */}
-        <section className="grid gap-6">
-          {/* Search Results Info */}
-          {searchTerm.trim() && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <p className="text-orange-800 text-sm">
+        {/* Search Results Info */}
+        {searchTerm.trim() && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-orange-800 text-sm font-medium">
                 {filteredQuestions.length > 0 
                   ? `Found ${filteredQuestions.length} result${filteredQuestions.length !== 1 ? 's' : ''} for "${searchTerm}"`
                   : `No results found for "${searchTerm}"`
@@ -186,53 +263,75 @@ export default function Home() {
               {filteredQuestions.length === 0 && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  className="text-orange-600 hover:text-orange-700 text-sm underline mt-1"
+                  className="text-orange-600 hover:text-orange-700 text-sm font-medium px-3 py-1 rounded-lg hover:bg-orange-100 transition-colors"
                 >
                   Clear search
                 </button>
               )}
             </div>
-          )}
+          </div>
+        )}
 
+        {/* Questions Section */}
+        <section className="space-y-4">
           {sortedQuestions.length > 0 ? (
-            sortedQuestions.map((q) => (
-              <QuestionCard
-                key={q.id}
-                id={q.id}
-                title={q.title}
-                answersCount={q.answersCount}
-                tags={q.tags}
-                username={q.username}
-                createdAt={q.createdAt}
-                views={q.views}
-              />
-            ))
+            <>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {searchTerm.trim() ? 'Search Results' : 'All Questions'}
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    ({sortedQuestions.length} {sortedQuestions.length === 1 ? 'question' : 'questions'})
+                  </span>
+                </h2>
+              </div>
+              
+              <div className="grid gap-4">
+                {sortedQuestions.map((q) => (
+                  <QuestionCard
+                    key={q.id}
+                    id={q.id}
+                    title={q.title}
+                    answersCount={q.answersCount}
+                    tags={q.tags}
+                    username={q.username}
+                    createdAt={q.createdAt}
+                    views={q.views}
+                  />
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {searchTerm.trim() ? 'No questions found' : 'No questions available'}
-              </h3>
-              <p className="text-gray-500 text-sm mb-4">
-                {searchTerm.trim() 
-                  ? 'Try different search terms or ask a new question!'
-                  : 'Try different search terms or ask the first question!'
-                }
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {searchTerm.trim() && (
-                  <Button 
-                    variant="outline"
-                    onClick={() => setSearchTerm('')}
-                    className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                  >
-                    Clear Search
-                  </Button>
-                )}
-                <Link href="/add-questions">
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 shadow-md">
-                    Ask Question
-                  </Button>
-                </Link>
+            <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-orange-100">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-8 h-8 text-orange-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  {searchTerm.trim() ? 'No questions found' : 'No questions yet'}
+                </h3>
+                <p className="text-gray-600 text-sm mb-6">
+                  {searchTerm.trim() 
+                    ? 'Try different search terms or ask a new question to get the conversation started!'
+                    : 'Be the first to ask a question and help build this community!'
+                  }
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {searchTerm.trim() && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSearchTerm('')}
+                      className="border-orange-300 text-orange-700 hover:bg-orange-50 rounded-xl"
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                  <Link href="/add-questions">
+                    <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 rounded-xl">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ask Question
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           )}
