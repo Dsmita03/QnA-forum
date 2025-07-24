@@ -17,12 +17,12 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(cookieParser());
 
 // app.use(cors());
 // ✅ Middleware
 app.use(express.json());
 //cookie-parser
-app.use(cookieParser());
 // ✅ MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
