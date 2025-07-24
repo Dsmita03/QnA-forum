@@ -71,7 +71,7 @@ export default function QuestionPage({ params }: Props) {
             }
         };
         getAnswers();
-    }, []);
+    }, [answers]);
     const validateAnswerContent = (content: string): boolean => {
         const stripped = content.replace(/<[^>]*>/g, "").trim();
 
