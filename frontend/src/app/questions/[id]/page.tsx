@@ -51,7 +51,7 @@ export default function QuestionPage({ params }: Props) {
         const getQuestionbyId = async () => {
             const { id } = params;
             const response = await axios.get(
-                `http://localhost:5000/api/questions/${id}`
+                `http://localhost:5001/api/questions/${id}`
             );
             setQuestion(response.data);
         };
@@ -63,7 +63,7 @@ export default function QuestionPage({ params }: Props) {
         const getAnswers = async () => {
             const { id } = params;
             const response = await axios.get(
-                `http://localhost:5000/api/answers/${id}`
+                `http://localhost:5001/api/answers/${id}`
             );
             if (response.status === 200) {
                 console.log(response.data);
@@ -95,7 +95,7 @@ export default function QuestionPage({ params }: Props) {
 
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/answers",
+                "http://localhost:5001/api/answers",
                 {
                     questionId: question?._id,
                     content: newAnswer,

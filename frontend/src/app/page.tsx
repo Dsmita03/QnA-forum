@@ -53,7 +53,7 @@ export default function Home() {
         const fetchAnswers = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:5000/api/answers/count"
+                    "http://localhost:5001/api/answers/count"
                 );
                 console.log("🔹 Answer count:", res.data);
                 setTotalAnswers(res.data); // 👈 assuming { count: number }
@@ -69,7 +69,7 @@ export default function Home() {
         const fetchUsers = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:5000/api/auth/count"
+                    "http://localhost:5001/api/auth/count"
                 );
                 console.log("🔹 User count:", res.data);
                 setTotalUsers(res.data); // 👈 assuming { count: number }
@@ -85,7 +85,7 @@ export default function Home() {
             try {
                 setLoading(true);
                 const res = await axios.get(
-                    "http://localhost:5000/api/questions"
+                    "http://localhost:5001/api/questions"
                 );
                 console.log("🔹 Questions:", res.data);
 

@@ -128,7 +128,7 @@ const AskQuestionPage = () => {
         userId: user?.userId,
       };
 
-      const response = await axios.post('http://localhost:5000/api/questions', questionData, {
+      const response = await axios.post('http://localhost:5001/api/questions', questionData, {
         withCredentials: true,
       });
 
