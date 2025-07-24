@@ -104,3 +104,12 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'Server error.' });
   }
 };
+
+export const getTotalNoOfUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users.length);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+}

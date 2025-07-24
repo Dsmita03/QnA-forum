@@ -50,3 +50,12 @@ export const getAnswerByQuestionId=async (req, res) => {
     res.status(500).json({ error: "Failed to fetch answers" });
   }
 }
+//get total no of answers
+export const getTotalNoOfAnswers=async (req, res) => {
+  try {
+    const answers = await Answer.find({});
+    res.status(200).json(answers.length);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch answers" });
+  }
+}
