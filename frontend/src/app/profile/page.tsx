@@ -21,6 +21,7 @@ import {
     Award,
 } from "lucide-react";
 import axios from "axios";
+import { useAppStore } from "@/store";
 
 interface UserProfile {
     userId: string;
@@ -37,16 +38,17 @@ interface UserProfile {
 }
 
 export default function Profile() {
+    const user = useAppStore((state) => state.user);
     const [profile, setProfile] = useState<UserProfile>({
-        userId: "Kshiti123",
-        name: "Kshiti Ghelani",
-        email: "kshitighelani@gmail.com",
-        phone: "123 456 7890",
-        profession: "Web Developer and Designer",
-        bio: "Passionate web developer with expertise in modern frameworks and design. Love creating beautiful, functional web applications that solve real-world problems.",
+        userId: "",
+        name: "Add your name",
+        email: "Add your email",
+        phone: "Add your phone number",
+        profession: "Add your profession",
+        bio: "Add your bio",
         avatar: "/profile.png",
         coverImage: "",
-        websiteLink: "https://kshitighelani.dev",
+        websiteLink: "Add your website link",
         rankings: "8/10",
         joinedDate: "2023-01-15",
     });
@@ -60,19 +62,28 @@ export default function Profile() {
     const coverInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-       const fetchProfile = async () => {
-           try {
-               const response = await axios.get('http://localhost:5001/api/auth/profile',{withCredentials: true});
-               console.log(response);
-              
-           } catch (error) {
-               console.error('Error fetching profile:', error);
-           }
-       }
+        const fetchProfile = async () => {
+            try {
+                const response = await axios.get(
+                    "http://localhost:5001/api/auth/profile",
+                    { withCredentials: true }
+                );
+                const data = response.data;
+                setProfile((prev) => ({
+                    ...prev,
+                    ...data,
+                    userId: data.id ?? prev.userId,
+                }));
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        };
 
-       fetchProfile();
+        fetchProfile();
     }, []);
-
+    useEffect(() => {
+        setEditedProfile(profile); // sync editedProfile with new profile
+    }, [profile]);
     const handleSave = async () => {
         setLoading(true);
         // API call would go here
@@ -103,7 +114,7 @@ export default function Profile() {
         { label: "Name", value: profile.name },
         { label: "Email", value: profile.email, editable: true },
         { label: "Phone", value: profile.phone, editable: true },
-        { label: "Profession", value: profile.profession },
+        { label: "Profession", value: profile.profession, editable: true },
     ];
 
     const timelineItems = [
@@ -369,7 +380,7 @@ export default function Profile() {
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
-                                                    Website Link
+                                                    {profile.websiteLink}
                                                 </a>
                                             ) : (
                                                 <Input
