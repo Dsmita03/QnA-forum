@@ -22,11 +22,11 @@ const generateToken = (user) => {
 // =====================
 export const signup = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name,email, password, role } = req.body;
 
     // Check required
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email and password are required.' });
     }
 
     // Check if user exists
@@ -36,6 +36,7 @@ export const signup = async (req, res) => {
     }
     const hashed = await bcrypt.hash(password, 12);
     const user = await User.create({
+      name,
       email,
       password: hashed,
       role: role || 'user',
@@ -51,6 +52,7 @@ export const signup = async (req, res) => {
       message: 'User created successfully!',
       user: {
         id: user._id,
+        name: user.name,
         email: user.email,
         role: user.role,
       },
@@ -99,6 +101,7 @@ export const login = async (req, res) => {
       message: 'Logged in successfully!',
       user: {
         id: user._id,
+         name: user.name,
         email: user.email,
         role: user.role,
       },
@@ -118,14 +121,33 @@ export const getTotalNoOfUsers = async (req, res) => {
   }
 }
 
+// export const getUserById = async (req, res) => {
+//   console.log(req.user);
+//   const id = req.user.id;
+//   console.log(id);
+//   try {
+//     const user = await User.findById(id);
+//     res.status(200).json(user);
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to fetch user" });
+//   }
+// }
 export const getUserById = async (req, res) => {
-  console.log(req.user);
-  const id = req.user.id;
-  console.log(id);
   try {
-    const user = await User.findById(id);
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch user" });
+    const userId = req.user.id;
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      id: user._id,
+      name: user.name,       
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user", error });
   }
-}
+};

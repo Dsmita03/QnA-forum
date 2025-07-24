@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true,
+      minlength: 2,
+      maxlength: 50,
     },
     phone: {
       type: String,
@@ -42,11 +44,11 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: '', // URL or base64 string
+      default: '',  
     },
     coverImage: {
       type: String,
-      default: '', // URL or base64 string
+      default: '',  
     },
     websiteLink: {
       type: String,

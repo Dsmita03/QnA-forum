@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store";
 
 export default function Signup() {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("user");
@@ -16,7 +17,7 @@ export default function Signup() {
     const [error, setError] = useState("");
     const router = useRouter();
     const setUser = useAppStore((state) => state.setUser);
-    
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -26,6 +27,7 @@ export default function Signup() {
             const res = await axios.post(
                 "http://localhost:5001/api/auth/signup",
                 {
+                    name,
                     email,
                     password,
                     role,
@@ -36,10 +38,11 @@ export default function Signup() {
             );
 
             if (res.status === 201) {
-                console.log(res.data);
                 const data = res.data.user;
                 setUser({
                     userId: data.id,
+                    name: data.name, 
+                    email: data.email,
                     role: data.role,
                     isLoggedIn: true,
                 });
@@ -82,10 +85,21 @@ export default function Signup() {
                         </p>
                     </div>
 
-                    <form
-                        className="space-y-6"
-                        onSubmit={handleSignup}
-                    >
+                    <form className="space-y-6" onSubmit={handleSignup}>
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-700">
+                                User Name
+                            </label>
+                            <input
+                                type="text" // ✅ fixed type
+                                placeholder="Enter your name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200"
+                            />
+                        </div>
+
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-700">
                                 Email Address
