@@ -7,6 +7,7 @@ interface User {
     email?: string;
     role?: string;
     isLoggedIn?: boolean;
+    profileImage: string;
 }
 
 interface AppState {
@@ -24,6 +25,7 @@ export const useAppStore = create<AppState>()(
                 email: undefined,
                 role: undefined,
                 isLoggedIn: false,
+                profileImage: "/profile.png", 
             },
             setUser: (newUser) =>
                 set({
@@ -33,6 +35,7 @@ export const useAppStore = create<AppState>()(
                         email: newUser.email,
                         role: newUser.role,
                         isLoggedIn: newUser.isLoggedIn ?? true,
+                        profileImage: newUser.profileImage || "/profile.png",
                     },
                 }),
             clearUser: () =>
@@ -43,6 +46,7 @@ export const useAppStore = create<AppState>()(
                         email: undefined,
                         role: undefined,
                         isLoggedIn: false,
+                        profileImage: "/profile.png",
                     },
                 })),
         }),

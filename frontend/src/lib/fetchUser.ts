@@ -14,6 +14,7 @@ export const fetchAndStoreUser = async () => {
       userId: user.id,
       role: user.role,
       isLoggedIn: true,
+      profileImage: user.profileImage || "/profile.png",
     });
   } catch (err) {
     console.error("Error fetching user profile", err);
