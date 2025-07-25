@@ -37,6 +37,7 @@ export default function Login() {
                 console.log(res.data);
                 const data = res.data.user;
                 setUser({
+                    name: data.name,
                     userId: data.id,
                     role: data.role,
                     isLoggedIn: true,
