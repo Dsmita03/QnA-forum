@@ -1,8 +1,8 @@
 // backend/controllers/authController.js
-
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'; 
+import asyncHandler from 'express-async-handler';
 
 // Helper: Generate JWT
 const generateToken = (user) => {
@@ -144,12 +144,48 @@ export const getUserById = async (req, res) => {
     }
 
     res.status(200).json({
-      id: user._id,
-      name: user.name,       
-      email: user.email,
-      role: user.role,
+     id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            profession: user.profession,
+            bio: user.bio,
+            avatar: user.avatar,
+            coverImage: user.coverImage,
+            websiteLink: user.websiteLink,
+            rankings: user.rankings,
+            joinedDate: user.createdAt,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user", error });
   }
 };
+
+export const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
+
+    if (user) {
+        // Merge only the fields that were sent in req.body
+        Object.assign(user, req.body);
+
+        const updatedUser = await user.save();
+
+     
+        res.status(200).json({
+            id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            phone: updatedUser.phone,
+            profession: updatedUser.profession,
+            bio: updatedUser.bio,
+            avatar: updatedUser.avatar,
+            coverImage: updatedUser.coverImage,
+            websiteLink: updatedUser.websiteLink,
+            rankings: updatedUser.rankings,
+            joinedDate: updatedUser.createdAt,
+        });
+    } else {
+        res.status(404);
+        throw new Error("User not found");
+    }
+});
