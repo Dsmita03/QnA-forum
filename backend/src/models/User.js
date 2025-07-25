@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
     rankings: {
       type: String,
       default: '0',
