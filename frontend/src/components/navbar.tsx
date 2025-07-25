@@ -48,6 +48,7 @@ export default function Navbar() {
         role: data.role,
         userId: data.id,
         isLoggedIn: true,
+        profileImage: data.profileImage || "/profile.png",
       });
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -75,7 +76,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser({ name: "", email: "", role: "", userId: "", isLoggedIn: false });
+    setUser({ name: "", email: "", role: "", userId: "", isLoggedIn: false , profileImage: "" });
     router.push("/login");
   };
 
@@ -147,7 +148,14 @@ export default function Navbar() {
             <button onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center space-x-2 p-1 rounded-lg hover:bg-orange-50 transition-colors">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-orange-200">
-                <Image src="/profile.png" alt="Profile" width={32} height={32} className="w-full h-full object-cover" />
+               <Image
+                    src={user.profileImage}
+                    alt={user.name}
+                    className="rounded-full"
+                    width={40}
+                    height={40}
+                 />
+
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-sm font-medium text-gray-800">
@@ -164,7 +172,13 @@ export default function Navbar() {
                 <div className="p-3 border-b">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-200">
-                      <Image src="/profile.png" alt="Profile" width={40} height={40} className="w-full h-full object-cover" />
+                      <Image
+                            src={user.profileImage || "/profile.png"}
+                            alt={user.name}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover rounded-full"
+                      />
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">

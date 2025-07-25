@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
 import Navbar from "@/components/navbar";
@@ -40,6 +40,7 @@ interface UserProfile {
 
 export default function Profile() {
     const user = useAppStore((state) => state.user);
+    const setUser = useAppStore((state) => state.setUser);
     const [profile, setProfile] = useState<UserProfile>({
         userId: "",
         name: "Add your name",
@@ -75,13 +76,22 @@ export default function Profile() {
                     ...data,
                     userId: data.id ?? prev.userId,
                 }));
+                setUser({
+                name: data.name ?? "",
+                email: data.email,
+                userId: data.id,
+                role: data.role,
+                isLoggedIn: true,
+                profileImage: data.avatar || "/profile.png",
+            });
             } catch (error) {
                 console.error("Error fetching profile:", error);
             }
         };
+fetchProfile();
+}, []);
 
-        fetchProfile();
-    }, []);
+
     useEffect(() => {
         setEditedProfile(profile); // sync editedProfile with new profile
     }, [profile]);
@@ -136,7 +146,12 @@ export default function Profile() {
 
         setProfile(updatedProfile);
         setEditedProfile(updatedProfile);
-
+        if (type === "avatar") {
+         setUser({
+             ...user,
+          profileImage: imageUrl,
+      });
+    }
         // Optional: persist to backend DB
         await axios.put(
             "http://localhost:5001/api/auth/profile",
