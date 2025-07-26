@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 type Props = {
   id: string;
@@ -13,8 +13,8 @@ type Props = {
   username: string;
   createdAt?: string;
   views?: number;
-  upvotes?: number;
-  downvotes?: number;
+  likes?: number;
+  dislikes?: number;
 };
 
 export default function QuestionCard({
@@ -25,36 +25,50 @@ export default function QuestionCard({
   username,
   createdAt,
   views,
-  upvotes = 0,
-  downvotes = 0,
+  likes = 0,
+  dislikes = 0,
 }: Props) {
   const [isClient, setIsClient] = useState(false);
-  const [vote, setVote] = useState<'up' | 'down' | null>(null);
-  const [upvoteCount, setUpvoteCount] = useState(upvotes);
-  const [downvoteCount, setDownvoteCount] = useState(downvotes);
+  const [likeActive, setLikeActive] = useState(false);
+  const [dislikeActive, setDislikeActive] = useState(false);
+  // Local only, replace with API/DB ops for persistence
+  const [likeCount, setLikeCount] = useState(likes);
+  const [dislikeCount, setDislikeCount] = useState(dislikes);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleVote = (type: 'up' | 'down') => {
-    if (vote === type) {
-      // Undo vote
-      if (type === 'up') setUpvoteCount((c) => c - 1);
-      else setDownvoteCount((c) => c - 1);
-      setVote(null);
+  const handleLike = () => {
+    if (likeActive) {
+      setLikeActive(false);
+      setLikeCount((n) => n - 1);
     } else {
-      // Remove opposite vote if exists
-      if (vote === 'up') setUpvoteCount((c) => c - 1);
-      if (vote === 'down') setDownvoteCount((c) => c - 1);
-
-      // Add new vote
-      if (type === 'up') setUpvoteCount((c) => c + 1);
-      else setDownvoteCount((c) => c + 1);
-      setVote(type);
+      setLikeActive(true);
+      setLikeCount((n) => n + 1);
+      // Remove dislike if switching (optional)
+      if (dislikeActive) {
+        setDislikeActive(false);
+        setDislikeCount((n) => n - 1);
+      }
     }
+    // Optionally: trigger API here
+  };
 
-    // Optional: Send to API here
+  const handleDislike = () => {
+    if (dislikeActive) {
+      setDislikeActive(false);
+      setDislikeCount((n) => n - 1);
+    } else {
+      setDislikeActive(true);
+      setDislikeCount((n) => n + 1);
+      // Remove like if switching (optional)
+      if (likeActive) {
+        setLikeActive(false);
+        setLikeCount((n) => n - 1);
+      }
+    }
+    // Optionally: trigger API here
   };
 
   const formatDate = (dateString?: string) => {
@@ -72,21 +86,28 @@ export default function QuestionCard({
   return (
     <div className="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition-all duration-200">
       <div className="flex gap-4">
-        {/* Voting column */}
-        <div className="flex flex-col items-center justify-start gap-2">
+        {/* Like/Dislike column */}
+        <div className="flex flex-col items-center gap-2 pt-1">
           <button
-            onClick={() => handleVote('up')}
-            className={`p-1 rounded-full ${vote === 'up' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-orange-500'}`}
+            aria-label="Like"
+            onClick={handleLike}
+            className={`p-1.5 rounded-full transition-colors ${
+              likeActive ? 'bg-green-50 text-green-600' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+            }`}
           >
-            <ArrowUp className="w-5 h-5" />
+            <ThumbsUp className="w-5 h-5" />
           </button>
-          <span className="text-sm font-medium text-gray-700">{upvoteCount - downvoteCount}</span>
+          <span className="text-xs text-gray-700">{likeCount}</span>
           <button
-            onClick={() => handleVote('down')}
-            className={`p-1 rounded-full ${vote === 'down' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-orange-500'}`}
+            aria-label="Dislike"
+            onClick={handleDislike}
+            className={`p-1.5 rounded-full transition-colors ${
+              dislikeActive ? 'bg-red-50 text-red-600' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+            }`}
           >
-            <ArrowDown className="w-5 h-5" />
+            <ThumbsDown className="w-5 h-5" />
           </button>
+          <span className="text-xs text-gray-700">{dislikeCount}</span>
         </div>
 
         {/* Question Content */}
