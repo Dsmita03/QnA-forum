@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Flag } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";  // import your toast hook!
 
 type Props = {
   id: string;
@@ -12,7 +13,6 @@ type Props = {
   tags: string[];
   username: string;
   createdAt?: string;
-  views?: number;
   likes?: number;
   dislikes?: number;
 };
@@ -24,20 +24,18 @@ export default function QuestionCard({
   tags,
   username,
   createdAt,
-  views,
   likes = 0,
   dislikes = 0,
 }: Props) {
   const [isClient, setIsClient] = useState(false);
   const [likeActive, setLikeActive] = useState(false);
   const [dislikeActive, setDislikeActive] = useState(false);
-  // Local only, replace with API/DB ops for persistence
   const [likeCount, setLikeCount] = useState(likes);
   const [dislikeCount, setDislikeCount] = useState(dislikes);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { toast } = useToast(); // <<===
+
+  useEffect(() => { setIsClient(true); }, []);
 
   const handleLike = () => {
     if (likeActive) {
@@ -46,13 +44,11 @@ export default function QuestionCard({
     } else {
       setLikeActive(true);
       setLikeCount((n) => n + 1);
-      // Remove dislike if switching (optional)
       if (dislikeActive) {
         setDislikeActive(false);
         setDislikeCount((n) => n - 1);
       }
     }
-    // Optionally: trigger API here
   };
 
   const handleDislike = () => {
@@ -62,13 +58,17 @@ export default function QuestionCard({
     } else {
       setDislikeActive(true);
       setDislikeCount((n) => n + 1);
-      // Remove like if switching (optional)
       if (likeActive) {
         setLikeActive(false);
         setLikeCount((n) => n - 1);
       }
     }
-    // Optionally: trigger API here
+  };
+
+  const handleReport = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    toast("Report received! Our moderators will review this question soon.");
   };
 
   const formatDate = (dateString?: string) => {
@@ -84,68 +84,69 @@ export default function QuestionCard({
   };
 
   return (
-    <div className="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition-all duration-200">
-      <div className="flex gap-4">
+    <div className="relative border border-orange-100 bg-gradient-to-br from-white via-orange-50 to-white rounded-2xl px-6 py-5 shadow-[0_2px_8px_0_rgba(245,81,0,.05)] transition-all duration-200 group">
+      {/* Report Button (top right) */}
+      <button
+        type="button"
+        onClick={handleReport}
+        aria-label="Report question"
+        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-600 rounded-full transition-colors z-10 bg-white shadow hover:bg-orange-50"
+      >
+        <Flag className="w-5 h-5" />
+      </button>
+
+      <div className="flex gap-6 items-start">
         {/* Like/Dislike column */}
-        <div className="flex flex-col items-center gap-2 pt-1">
+        <div className="flex flex-col items-center pt-1 gap-1">
           <button
             aria-label="Like"
             onClick={handleLike}
-            className={`p-1.5 rounded-full transition-colors ${
-              likeActive ? 'bg-green-50 text-green-600' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+            className={`p-2 rounded-full transition-all ${
+              likeActive
+                ? 'bg-green-100 text-green-700 border-green-200 border'
+                : 'text-gray-300 hover:text-green-600 hover:bg-green-50'
             }`}
           >
             <ThumbsUp className="w-5 h-5" />
           </button>
-          <span className="text-xs text-gray-700">{likeCount}</span>
+          <span className="text-xs font-semibold text-gray-700">{likeCount}</span>
           <button
             aria-label="Dislike"
             onClick={handleDislike}
-            className={`p-1.5 rounded-full transition-colors ${
-              dislikeActive ? 'bg-red-50 text-red-600' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+            className={`p-2 rounded-full transition-all ${
+              dislikeActive
+                ? 'bg-red-100 text-red-600 border-red-200 border'
+                : 'text-gray-300 hover:text-red-600 hover:bg-red-50'
             }`}
           >
             <ThumbsDown className="w-5 h-5" />
           </button>
-          <span className="text-xs text-gray-700">{dislikeCount}</span>
+          <span className="text-xs font-semibold text-gray-700">{dislikeCount}</span>
         </div>
 
         {/* Question Content */}
-        <Link href={`/questions/${id}`} className="flex-1">
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-start">
-              <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-              <span className="text-sm text-orange-600 font-medium">
-                {answersCount} {answersCount === 1 ? "Answer" : "Answers"}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+        <Link href={`/questions/${id}`} className="flex-1 group-hover:scale-[1.01] transition-transform">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 line-clamp-2">{title}</h2>
+            <div className="flex flex-wrap gap-2 mt-1">
               {tags.map((tag) => (
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100"
+                  className="border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors"
                 >
                   {tag}
                 </Badge>
               ))}
             </div>
-
-            <div className="flex justify-between items-center text-sm text-gray-500 mt-2">
+            <div className="flex justify-between items-end text-xs text-gray-500 mt-3 pt-2 border-t border-orange-50">
               <div>
-                Posted by <span className="font-medium">{username}</span>
-                {createdAt && <span className="ml-2">• {formatDate(createdAt)}</span>}
+                Asked by <span className="font-medium text-orange-700">{username}</span>
+                {createdAt && <span className="ml-1">• {formatDate(createdAt)}</span>}
               </div>
-              {views !== undefined && (
-                <div className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  {/* <span>{views} views</span> */}
-                </div>
-              )}
+              <span className="ml-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-3 py-0.5 font-semibold text-xs shadow-sm">
+                {answersCount} {answersCount === 1 ? 'Answer' : 'Answers'}
+              </span>
             </div>
           </div>
         </Link>
