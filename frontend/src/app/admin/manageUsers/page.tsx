@@ -8,14 +8,11 @@ import {
     Mail,
     Ban,
     CheckCircle,
-    ShieldCheck,
     UserSearch,
     Search,
     Filter,
     ChevronLeft,
     ChevronRight,
-    Eye,
-    MailCheck,
     Users,
     ChevronDown,
     Briefcase,
@@ -151,7 +148,7 @@ export default function ManageUsersPage() {
                                     <option value="all">All Roles</option>
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>
-                                    <option value="guest">Guest</option>
+    
                                 </select>
                                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
                             </div>
