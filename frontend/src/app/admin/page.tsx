@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-
+import { useRouter } from 'next/navigation'; 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,11 +128,13 @@ const ActivityItem = ({ activity, index }: { activity: Activity; index: number }
     </motion.div>
   );
 };
+ 
 
 export default function AdminPage() {
   const [stats, setStats] = useState<Stat[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -283,28 +285,32 @@ export default function AdminPage() {
                       <h3 className="text-lg font-bold">Quick Actions</h3>
                     </div>
                     <div className="space-y-3">
-                      <Button 
-                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                        variant="outline"
-                      >
-                        <Users className="w-4 h-4 mr-2" />
-                        Manage Users
-                      </Button>
-                      <Button 
-                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                        variant="outline"
-                      >
-                        <AlertTriangle className="w-4 h-4 mr-2" />
-                        Review Flags
-                      </Button>
-                      <Button 
-                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                        variant="outline"
-                      >
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Analytics
-                      </Button>
-                    </div>
+                    <Button 
+                    className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    variant="outline"
+                    onClick={() => router.push('/admin/manageUsers')}
+      >
+                   <Users className="w-4 h-4 mr-2" />
+                    Manage Users
+                  </Button>
+                   <Button 
+                    className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    variant="outline"
+                    onClick={() => router.push('/admin/flags')}
+                    >
+                   <AlertTriangle className="w-4 h-4 mr-2" />
+                   Review Flags
+                 </Button>
+                 <Button 
+                 className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    variant="outline"
+                 onClick={() => router.push('/admin/analytics')}
+                  >
+                 <BarChart3 className="w-4 h-4 mr-2" />
+                  Analytics
+                </Button>
+                 </div>
+
                   </Card>
                 </motion.div>
 
