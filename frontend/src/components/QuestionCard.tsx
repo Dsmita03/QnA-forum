@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, Flag, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 type Props = {
     id: string;
@@ -56,20 +57,57 @@ export default function QuestionCard({
     };
   }, [showReportModal]);
 
-  const handleLike = () => {
-    if (likeActive) {
-      setLikeActive(false);
-      setLikeCount((n) => n - 1);
-    } else {
-      setLikeActive(true);
-      setLikeCount((n) => n + 1);
-      if (dislikeActive) {
-        setDislikeActive(false);
-        setDislikeCount((n) => n - 1);
-      }
-    }
-  };
+ 
 
+     const callIncreaseLike = async (id: string) => {
+        try {
+            const res = await axios.put(
+                "http://localhost:5001/api/questions/increase-like/",
+                { id },
+                { withCredentials: true }
+            );
+            console.log(res);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const callDecreaseLike = async (id: string) => {
+        try {
+            const res = await axios.put(
+                "http://localhost:5001/api/questions/decrease-like/",
+                { id },
+                { withCredentials: true }
+            );
+            console.log(res);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleLike = async (id: string) => {
+      console.log(likeActive)
+        if (likeActive) {
+            // User is unliking
+            await callDecreaseLike(id);
+            setLikeActive(false);
+            setLikeCount((n) => n - 1);
+        } else {
+            // User is liking
+            await callIncreaseLike(id);
+            setLikeActive(true);
+            setLikeCount((n) => n + 1);
+
+            // If user had disliked before, remove dislike
+            if (dislikeActive) {
+                await callIncreaseLike(id);
+                setDislikeActive(false);
+                setDislikeCount((n) => n - 1);
+            }
+        }
+    };
+
+  
     const handleDislike = async (id: string) => {
       console.log(dislikeActive,likeActive)
         if (dislikeActive) {
@@ -188,7 +226,7 @@ export default function QuestionCard({
           <div className="flex flex-col items-center pt-1 gap-1">
             <button
               aria-label="Like"
-              onClick={handleLike}
+              onClick={() => handleLike(id)}
               className={`p-2 rounded-full transition-all ${
                 likeActive
                   ? 'bg-green-100 text-green-700 border-green-200 border'
@@ -200,7 +238,7 @@ export default function QuestionCard({
             <span className="text-xs font-semibold text-gray-700">{likeCount}</span>
             <button
               aria-label="Dislike"
-              onClick={handleDislike}
+              onClick={() => handleDislike(id)}
               className={`p-2 rounded-full transition-all ${
                 dislikeActive
                   ? 'bg-red-100 text-red-600 border-red-200 border'
