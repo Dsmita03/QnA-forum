@@ -67,3 +67,27 @@ export const getQuestionById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch question" });
   }
 };
+
+export const increaseLike=async(req,res)=>{
+  const {id}=req.body;
+  try {
+    const question = await Question.findById(id);
+    question.votes+=1;
+    await question.save();
+    res.status(200).json({message:"Like increased"});
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch question" });
+  }
+}
+
+export const decreaseLike=async(req,res)=>{
+  const {id}=req.body;
+  try {
+    const question = await Question.findById(id);
+    question.votes-=1;
+    await question.save();
+    res.status(200).json({message:"Like decreased"});
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch question" });
+  }
+}
