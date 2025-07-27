@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, Flag, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
+import { report } from "process";
 
 type Props = {
     id: string;
@@ -165,11 +166,22 @@ export default function QuestionCard({
       //   reason: reportReason,
       //   reportedBy: currentUser?.id
       // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      toast("Report submitted successfully! Our moderators will review it soon.");
+      const response=await axios.post('http://localhost:5001/api/report/submit', {
+        questionId: id,
+        reason: selectedCategory,
+        message: reportReason
+      },{withCredentials: true});
+       toast(response.data.message,{
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+       }
+       );
       handleCloseModal();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

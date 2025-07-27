@@ -85,7 +85,8 @@ export default function Home() {
             try {
                 setLoading(true);
                 const res = await axios.get(
-                    "http://localhost:5001/api/questions"
+                    "http://localhost:5001/api/questions",
+                    { withCredentials: true }
                 );
                 console.log("🔹 Questions:", res.data);
 

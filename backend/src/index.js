@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import uploadRouter from "./routes/uploadRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import reportRouter from "./routes/reportRoute.js";
 dotenv.config();
 
 const app = express();
@@ -47,6 +48,7 @@ app.use("/api/answers", answerrouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/report", reportRouter);
 
 // ✅ Test Route
 app.get("/", (req, res) => {
