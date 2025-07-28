@@ -55,18 +55,7 @@ export const voteQuestion = async (req, res) => {
     question.votes += type === "up" ? 1 : -1;
     await question.save();
 
-     // 🔔 Notification logic
-    if (question.user.toString() !== voterId) {
-      await sendNotification({
-    recipientId: question.user,
-    type: "vote",
-    message:
-      type === "up"
-        ? "Your question received an upvote."
-        : "Your question received a downvote.",
-    link: `/question/${question._id}`,
-  });
-    }
+    
     res.json(question);
   } catch (err) {
     res.status(500).json({ error: "Voting failed" });
@@ -90,17 +79,7 @@ export const increaseLike=async(req,res)=>{
     const question = await Question.findById(id);
     question.votes+=1;
     await question.save();
-
-    // 🔔 Send notification to question owner
-    if (question.user.toString() !== voterId) {
-      await sendNotification({
-      recipientId: question.user,
-      type: "vote",
-      message: "Your question received an upvote.",
-      link: `/question/${question._id}`,
-
-      });
-    }
+ 
     res.status(200).json({message:"Like increased"});
 
   } catch (err) {
@@ -117,15 +96,7 @@ export const decreaseLike=async(req,res)=>{
     question.votes-=1;
     await question.save();
 
-     // 🔔 Send notification to question owner
-    if (question.user.toString() !== voterId) {
-      await sendNotification({
-     recipientId: question.user,
-     type: "vote",
-     message: "Your question received a downvote.",
-     link: `/question/${question._id}`,
-  });
-    }
+    
     res.status(200).json({message:"Like decreased"});
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch question" });
