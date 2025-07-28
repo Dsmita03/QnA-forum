@@ -52,7 +52,7 @@ app.use("/api/answers", answerrouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/upload", uploadRouter);
-app.use("/api/report", reportRouter);
+app.use("/api/reports", reportRouter);
 app.use("/api/notifications", notificationRoutes);
 
 // ✅ Test Route

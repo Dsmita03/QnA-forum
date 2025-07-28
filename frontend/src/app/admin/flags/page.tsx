@@ -23,7 +23,7 @@ import axios from 'axios';
 
 interface FlaggedItem {
   id: string;
-  type: 'question' | 'answer';
+  type: 'question';
   title: string;
   content: string;
   author: string;
@@ -34,7 +34,7 @@ interface FlaggedItem {
   status: 'pending' | 'reviewed' | 'dismissed';
   createdAt: string;
   reportedAt: string;
-  priority: 'low' | 'medium' | 'high';
+  // priority: 'low' | 'medium' | 'high';
   tags?: string[];
   originalUrl: string;
 }
@@ -60,7 +60,7 @@ export default function AdminReviewFlagsPage() {
 
   const fetchFlags = async () => {
     try {
-      const response = await axios.get('/api/admin/flags');
+      const response = await axios.get('http://localhost:5001/api/reports/admin/flags',{withCredentials: true});
       setFlags(response.data);
       
       const total = response.data.length;
@@ -78,7 +78,7 @@ export default function AdminReviewFlagsPage() {
 
   const handleAction = async (flagId: string, action: 'approve' | 'dismiss') => {
     try {
-      await axios.patch(`/api/admin/flags/${flagId}`, { action });
+      await axios.patch(`http://localhost:5001/api/reports/admin/flags/${flagId}`, { action });
       setFlags(flags.map(flag => 
         flag.id === flagId 
           ? { ...flag, status: action === 'approve' ? 'reviewed' : 'dismissed' }
@@ -103,14 +103,14 @@ export default function AdminReviewFlagsPage() {
     currentPage * itemsPerPage
   );
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-gradient-to-r from-orange-600 to-red-500 text-white border border-orange-700 shadow-lg';
-      case 'medium': return 'bg-gradient-to-r from-orange-400 to-orange-500 text-white border border-orange-500 shadow-md';
-      case 'low': return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm';
-      default: return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border border-orange-200 shadow-sm';
-    }
-  };
+  // const getPriorityBadge = (priority: string) => {
+  //   switch (priority) {
+  //     case 'high': return 'bg-gradient-to-r from-orange-600 to-red-500 text-white border border-orange-700 shadow-lg';
+  //     case 'medium': return 'bg-gradient-to-r from-orange-400 to-orange-500 text-white border border-orange-500 shadow-md';
+  //     case 'low': return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm';
+  //     default: return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border border-orange-200 shadow-sm';
+  //   }
+  // };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -286,7 +286,7 @@ export default function AdminReviewFlagsPage() {
                     <div className="col-span-3">Content Details</div>
                     <div className="col-span-2">Author Info</div>
                     <div className="col-span-1">Category</div>
-                    <div className="col-span-1">Priority</div>
+                    {/* <div className="col-span-1">Priority</div> */}
                     <div className="col-span-1">Status</div>
                     <div className="col-span-1">Date</div>
                     <div className="col-span-2">Actions</div>
@@ -331,9 +331,11 @@ export default function AdminReviewFlagsPage() {
                               <p className="font-semibold text-orange-900 text-xs mb-1 line-clamp-1">
                                 {flag.title}
                               </p>
-                              <p className="text-xs text-orange-700/80 line-clamp-2 mb-1">
-                                {flag.content}
-                              </p>
+                             <p 
+                           className="text-xs text-orange-700/80 line-clamp-2 mb-1"
+                            dangerouslySetInnerHTML={{ __html: flag.content }}
+                          />
+
                               <div className="flex items-center gap-1">
                                 <AlertTriangle className="w-3 h-3 text-orange-600" />
                                 <p className="text-xs text-orange-700 font-medium">
@@ -367,12 +369,12 @@ export default function AdminReviewFlagsPage() {
                               </Badge>
                             </div>
 
-                            {/* Priority */}
+                            {/* Priority
                             <div className="col-span-1 flex items-center">
                               <Badge className={`text-xs font-semibold px-2 py-1 rounded-full ${getPriorityBadge(flag.priority)}`}>
                                 {flag.priority}
                               </Badge>
-                            </div>
+                            </div> */}
 
                             {/* Status */}
                             <div className="col-span-1 flex items-center">
