@@ -34,7 +34,6 @@ interface FlaggedItem {
   status: 'pending' | 'reviewed' | 'dismissed';
   createdAt: string;
   reportedAt: string;
-  // priority: 'low' | 'medium' | 'high';
   tags?: string[];
   originalUrl: string;
 }
@@ -52,6 +51,15 @@ export default function AdminReviewFlagsPage() {
     dismissed: 0
   });
 
+  // ✅ Loading and error states for actions
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState<{
+    flagId: string;
+    action: 'approve' | 'dismiss';
+    title: string;
+  } | null>(null);
+
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -60,7 +68,9 @@ export default function AdminReviewFlagsPage() {
 
   const fetchFlags = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/reports/admin/flags',{withCredentials: true});
+      const response = await axios.get('http://localhost:5001/api/reports/admin/flags', {
+        withCredentials: true
+      });
       setFlags(response.data);
       
       const total = response.data.length;
@@ -76,16 +86,85 @@ export default function AdminReviewFlagsPage() {
     }
   };
 
+  // ✅ Complete handleAction with proper error handling and stats update
   const handleAction = async (flagId: string, action: 'approve' | 'dismiss') => {
+    setActionLoading(prev => ({ ...prev, [flagId]: true }));
+    setError(null);
+    
     try {
-      await axios.patch(`http://localhost:5001/api/reports/admin/flags/${flagId}`, { action });
-      setFlags(flags.map(flag => 
+      const response = await axios.patch(
+        `http://localhost:5001/api/reports/admin/flags/${flagId}`, 
+        { action },
+        { 
+          withCredentials: true,
+          timeout: 10000
+        }
+      );
+      
+      // ✅ Use functional update to avoid stale closure
+      setFlags(prevFlags => prevFlags.map(flag => 
         flag.id === flagId 
           ? { ...flag, status: action === 'approve' ? 'reviewed' : 'dismissed' }
           : flag
       ));
-    } catch (error) {
+      
+      // ✅ Update stats from backend response or manually
+      if (response.data.updatedStats) {
+        setStats(response.data.updatedStats);
+      } else {
+        setStats(prevStats => {
+          const newStats = { ...prevStats };
+          newStats.pending = Math.max(0, newStats.pending - 1);
+          if (action === 'approve') {
+            newStats.reviewed += 1;
+          } else {
+            newStats.dismissed += 1;
+          }
+          return newStats;
+        });
+      }
+      
+      // Success feedback
+      console.log(`Report ${action === 'approve' ? 'approved and content removed' : 'dismissed'} successfully`);
+      
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error('Failed to update flag:', error);
+      
+      let errorMessage = 'Failed to process report. Please try again.';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'Report not found or already processed.';
+        fetchFlags(); // Refresh data
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error.response?.status === 409) {
+        errorMessage = 'Report has already been processed.';
+        fetchFlags(); // Refresh data
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please check your connection.';
+      }
+      
+      setError(errorMessage);
+      
+    } finally {
+      setActionLoading(prev => ({ ...prev, [flagId]: false }));
+    }
+  };
+ 
+  // ✅ Action handler with confirmation for destructive actions
+  const handleActionClick = (flagId: string, action: 'approve' | 'dismiss', title: string) => {
+    if (action === 'approve') {
+      setConfirmingAction({ flagId, action, title });
+    } else {
+      handleAction(flagId, action);
+    }
+  };
+
+  const confirmAction = () => {
+    if (confirmingAction) {
+      handleAction(confirmingAction.flagId, confirmingAction.action);
+      setConfirmingAction(null);
     }
   };
 
@@ -102,15 +181,6 @@ export default function AdminReviewFlagsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // const getPriorityBadge = (priority: string) => {
-  //   switch (priority) {
-  //     case 'high': return 'bg-gradient-to-r from-orange-600 to-red-500 text-white border border-orange-700 shadow-lg';
-  //     case 'medium': return 'bg-gradient-to-r from-orange-400 to-orange-500 text-white border border-orange-500 shadow-md';
-  //     case 'low': return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm';
-  //     default: return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border border-orange-200 shadow-sm';
-  //   }
-  // };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -286,7 +356,6 @@ export default function AdminReviewFlagsPage() {
                     <div className="col-span-3">Content Details</div>
                     <div className="col-span-2">Author Info</div>
                     <div className="col-span-1">Category</div>
-                    {/* <div className="col-span-1">Priority</div> */}
                     <div className="col-span-1">Status</div>
                     <div className="col-span-1">Date</div>
                     <div className="col-span-2">Actions</div>
@@ -331,11 +400,10 @@ export default function AdminReviewFlagsPage() {
                               <p className="font-semibold text-orange-900 text-xs mb-1 line-clamp-1">
                                 {flag.title}
                               </p>
-                             <p 
-                           className="text-xs text-orange-700/80 line-clamp-2 mb-1"
-                            dangerouslySetInnerHTML={{ __html: flag.content }}
-                          />
-
+                              <p 
+                                className="text-xs text-orange-700/80 line-clamp-2 mb-1"
+                                dangerouslySetInnerHTML={{ __html: flag.content }}
+                              />
                               <div className="flex items-center gap-1">
                                 <AlertTriangle className="w-3 h-3 text-orange-600" />
                                 <p className="text-xs text-orange-700 font-medium">
@@ -369,13 +437,6 @@ export default function AdminReviewFlagsPage() {
                               </Badge>
                             </div>
 
-                            {/* Priority
-                            <div className="col-span-1 flex items-center">
-                              <Badge className={`text-xs font-semibold px-2 py-1 rounded-full ${getPriorityBadge(flag.priority)}`}>
-                                {flag.priority}
-                              </Badge>
-                            </div> */}
-
                             {/* Status */}
                             <div className="col-span-1 flex items-center">
                               <Badge className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusBadge(flag.status)}`}>
@@ -402,21 +463,38 @@ export default function AdminReviewFlagsPage() {
                                   <Eye className="w-3 h-3" />
                                 </Button>
                               </Link>
+                              
+                              {/* Dismiss button with loading state */}
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleAction(flag.id, 'dismiss')}
-                                className="h-8 w-8 p-0 hover:bg-orange-300 hover:text-orange-900 rounded-xl transition-all group-hover:scale-105 shadow-sm border border-orange-200"
+                                onClick={() => handleActionClick(flag.id, 'dismiss', flag.title)}
+                                disabled={actionLoading[flag.id] || flag.status !== 'pending'}
+                                // className="h-8 w-8 p-0 hover:bg-green-200 hover:text-green-800 rounded-xl transition-all group-hover:scale-105 shadow-sm border border-orange-200 disabled:opacity-50"
+                                className="h-8 w-8 p-0 hover:bg-red-400 hover:text-white rounded-xl transition-all group-hover:scale-105 shadow-sm border border-orange-200 disabled:opacity-50"
+                                 title="Dismiss report"
                               >
-                                <Check className="w-3 h-3" />
+                                {actionLoading[flag.id] ? (
+                                  <div className="w-3 h-3 border border-red-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <X className="w-3 h-3" />
+                                )}
                               </Button>
+                              
+                              {/* Approve button with loading state */}
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleAction(flag.id, 'approve')}
-                                className="h-8 w-8 p-0 hover:bg-orange-400 hover:text-white rounded-xl transition-all group-hover:scale-105 shadow-sm border border-orange-200"
+                                onClick={() => handleActionClick(flag.id, 'approve', flag.title)}
+                                disabled={actionLoading[flag.id] || flag.status !== 'pending'}
+                                className="h-8 w-8 p-0 hover:bg-green-200 hover:text-green-800 rounded-xl transition-all group-hover:scale-105 shadow-sm border border-orange-200 disabled:opacity-50"
+                                title="Approve report and remove content"
                               >
-                                <X className="w-3 h-3" />
+                                {actionLoading[flag.id] ? (
+                                  <div className="w-3 h-3 border border-green-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="w-3 h-3" />
+                                )}
                               </Button>
                             </div>
                           </motion.div>
@@ -481,6 +559,73 @@ export default function AdminReviewFlagsPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* ✅ Confirmation Modal */}
+        {confirmingAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white p-6 rounded-xl max-w-md w-full mx-4 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-full">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Confirm Content Removal</h3>
+              </div>
+              
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to approve this report and permanently remove the content 
+                <span className="font-semibold text-gray-800"> &quot;{confirmingAction.title}&quot;</span>? 
+                <br /><br />
+                This action cannot be undone and the author will be notified.
+              </p>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmingAction(null)}
+                  className="flex-1 border-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmAction}
+                  disabled={actionLoading[confirmingAction.flagId]}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {actionLoading[confirmingAction.flagId] ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Removing...
+                    </div>
+                  ) : (
+                    'Remove Content'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ✅ Error Display */}
+        {error && (
+          <div className="fixed bottom-4 right-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl shadow-lg z-50 max-w-sm">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+              <button 
+                onClick={() => setError(null)}
+                className="text-red-600 hover:text-red-800 flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

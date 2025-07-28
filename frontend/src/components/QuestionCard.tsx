@@ -166,7 +166,7 @@ export default function QuestionCard({
       //   reason: reportReason,
       //   reportedBy: currentUser?.id
       // });
-      const response=await axios.post('http://localhost:5001/api/report/submit', {
+      const response=await axios.post('http://localhost:5001/api/reports/submit', {
         questionId: id,
         reason: selectedCategory,
         message: reportReason
