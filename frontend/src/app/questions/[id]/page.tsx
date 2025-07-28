@@ -61,7 +61,7 @@ export default function QuestionPage({ params }: Props) {
   useEffect(() => {
     const getQuestionbyId = async () => {
       const response = await axios.get(
-        `http://localhost:5001/api/questions/${id}`
+        `http://localhost:5001/api/questions/${id}`,{withCredentials: true}
       );
       setQuestion(response.data);
       setLikeCount(response.data?.likes ?? 0);
@@ -74,7 +74,7 @@ export default function QuestionPage({ params }: Props) {
   useEffect(() => {
     const getAnswers = async () => {
       const response = await axios.get(
-        `http://localhost:5001/api/answers/${id}`
+        `http://localhost:5001/api/answers/${id}`,{withCredentials: true}
       );
       if (response.status === 200) setAnswers(response.data);
     };
@@ -106,7 +106,8 @@ export default function QuestionPage({ params }: Props) {
           questionId: question?._id,
           content: newAnswer,
           userId: user?.userId,
-        }
+        },
+      {withCredentials: true}
       );
       if (response.status === 201) {
         toast.success("Answer submitted successfully!");

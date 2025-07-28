@@ -1,6 +1,6 @@
 
+export const onlineUsers = new Map();
 export const registerSocketServer = (io) => {
-  const onlineUsers= new Map(); 
   io.on("connection", (socket) => { 
     console.log("User connected", socket.id);
 

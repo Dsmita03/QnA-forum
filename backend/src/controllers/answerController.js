@@ -7,7 +7,14 @@ const { questionId, content, userId } = req.body;
 
   try {
     const answer = await Answer.create({ questionId, content, user: userId });
-
+    const question= await Question.findById(questionId).populate('user');
+    await sendNotification({
+      recipientId: question.user._id,
+      senderId: req.user.id,
+      referenceId: answer._id,
+      type: "answer",
+      message: `${req.user.username || 'Someone'} answered your question: "${answer.content.substring(0, 20)}"`
+    });
 
     res.status(201).json(answer);
   } catch (err) {

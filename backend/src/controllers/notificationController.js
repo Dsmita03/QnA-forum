@@ -1,83 +1,53 @@
-// import onlineUsers from "../sockets/onlineUsers.js";
-import { Notification } from "../models/Notification.js";
-import { io } from "../index.js";
+import { Notification } from "../models/notification.js";
+import { io } from "../index.js";   // the instance you exported
+import { onlineUsers } from "../sockets/index.js"; // may need to export this map
 
-// ✅ Get all notifications (mapped to include `id`)
-export const getNotifications = async (req, res) => {
+// Call this from your route/controller for notification trigger
+export const sendNotification = async ({
+  recipientId,
+  senderId,
+  referenceId,
+  type,
+  message,
+}) => {
   try {
-    const notifications = await Notification.find({ userId: req.user.id })
-      .sort({ createdAt: -1 });
-
-    const mapped = notifications.map((n) => ({
-      id: n._id.toString(),
-      message: n.message,
-      link: n.link,
-      createdAt: n.createdAt,
-      seen: n.seen,
-    }));
-
-    res.json(mapped);
-  } catch (err) {
-    res.status(500).json({ error: "Unable to fetch notifications" });
-  }
-};
-
-// ✅ Mark a single notification as read
-export const markNotificationAsRead = async (req, res) => {
-  try {
-    const updated = await Notification.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.id },
-      { $set: { seen: true } },
-      { new: true }
-    );
-
-    if (!updated) {
-      return res.status(404).json({ error: "Notification not found" });
-    }
-
-    // Return mapped version
-    res.json({
-      success: true,
-      updated: {
-        id: updated._id.toString(),
-        message: updated.message,
-        link: updated.link,
-        createdAt: updated.createdAt,
-        seen: updated.seen,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to update notification" });
-  }
-};
-
-// ✅ Send real-time + DB notification (with id in payload)
-export const sendNotification = async ({ recipientId, type, message, link }) => {
-  try {
-    const newNotification = await Notification.create({
-      userId: recipientId,
+    // Save notification to DB
+    const notification = await Notification.create({
+      recipientId,
+      senderId,
+      referenceId,
       type,
       message,
-      link,
     });
 
-    const formattedNotification = {
-      id: newNotification._id.toString(),
-      message: newNotification.message,
-      link: newNotification.link,
-      createdAt: newNotification.createdAt,
-      seen: newNotification.seen,
-    };
-
-    const socketSet = onlineUsers.get(recipientId.toString());
-    if (socketSet) {
-      socketSet.forEach((socketId) => {
-        io.to(socketId).emit("new-notification", formattedNotification);
-      });
+    // Real-time emit via socket.io
+    const sockets = onlineUsers.get(String(recipientId));
+    if (sockets && sockets.size > 0) {
+      for (const socketId of sockets) {
+        io.to(socketId).emit("notification", {
+          _id: notification._id,
+          senderId,
+          referenceId,
+          type,
+          message,
+          createdAt: notification.createdAt,
+          seen: notification.seen,
+        });
+      }
     }
 
-    return formattedNotification;
+    return notification;
   } catch (err) {
-    console.error("Error sending notification:", err.message);
+    console.error("Notification error:", err);
+    throw err;
+  }
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ recipientId: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch notifications" });
   }
 };

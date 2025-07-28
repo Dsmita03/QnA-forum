@@ -73,29 +73,50 @@ export const getQuestionById = async (req, res) => {
   }
 };
  
-export const increaseLike=async(req,res)=>{
-  const {id}=req.body;
+export const increaseLike = async (req, res) => {
+  const { id } = req.body;       // id is question id
   try {
-    const question = await Question.findById(id);
-    question.votes+=1;
+    const question = await Question.findById(id).populate('user'); // Ensure populated
+    if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    question.votes += 1;
     await question.save();
- 
-    res.status(200).json({message:"Like increased"});
+
+   await sendNotification({
+      recipientId: question.user._id,
+      senderId: req.user.id,
+      referenceId: question._id,
+      type: "like",
+      message: `${req.user.username || 'Someone'} liked your question: "${question.title}"`
+    });
+
+    res.status(200).json({ message: "Like increased" });
 
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch question" });
   }
-}
+};
 
 
  
 export const decreaseLike=async(req,res)=>{
   const {id}=req.body;
   try {
-    const question = await Question.findById(id);
+    const question = await Question.findById(id).populate('user');
+       if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
     question.votes-=1;
     await question.save();
-
+    await sendNotification({
+      recipientId: question.user._id,
+      senderId: req.user.id,
+      referenceId: question._id,
+      type: "dislike",
+      message: `${req.user.username || 'Someone'} unliked your question: "${question.title}"`
+    })
     
     res.status(200).json({message:"Like decreased"});
   } catch (err) {

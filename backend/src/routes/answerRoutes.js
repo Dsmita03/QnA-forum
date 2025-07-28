@@ -7,11 +7,12 @@ import {
   getAnswerByQuestionId,
   getTotalNoOfAnswers,
 } from "../controllers/answerController.js";
+import verifyToken from "../middlewares/auth.js";
 
 const answerrouter = express.Router();
 
 answerrouter.post("/", 
-  // verifyToken, 
+   verifyToken, 
   addAnswer);
 answerrouter.post("/vote/:id", 
   // verifyToken, 
