@@ -1,5 +1,7 @@
 import { Question } from "../models/Question.js";
+import { sendNotification } from "./notificationController.js";
 
+ 
 export const createQuestion = async (req, res) => {
   try {
     const { title, description, tags, userId } = req.body;
@@ -46,11 +48,25 @@ export const getAllQuestions = async (req, res) => {
 
 export const voteQuestion = async (req, res) => {
   const { id } = req.params;
-  const { type } = req.body; // up or down
+  const { type } = req.body; 
+  const voterId = req.user?.id || req.user?.uid;
   try {
     const question = await Question.findById(id);
     question.votes += type === "up" ? 1 : -1;
     await question.save();
+
+     // 🔔 Notification logic
+    if (question.user.toString() !== voterId) {
+      await sendNotification({
+    recipientId: question.user,
+    type: "vote",
+    message:
+      type === "up"
+        ? "Your question received an upvote."
+        : "Your question received a downvote.",
+    link: `/question/${question._id}`,
+  });
+    }
     res.json(question);
   } catch (err) {
     res.status(500).json({ error: "Voting failed" });
@@ -67,25 +83,49 @@ export const getQuestionById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch question" });
   }
 };
-
+ 
 export const increaseLike=async(req,res)=>{
   const {id}=req.body;
   try {
     const question = await Question.findById(id);
     question.votes+=1;
     await question.save();
+
+    // 🔔 Send notification to question owner
+    if (question.user.toString() !== voterId) {
+      await sendNotification({
+      recipientId: question.user,
+      type: "vote",
+      message: "Your question received an upvote.",
+      link: `/question/${question._id}`,
+
+      });
+    }
     res.status(200).json({message:"Like increased"});
+
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch question" });
   }
 }
 
+
+ 
 export const decreaseLike=async(req,res)=>{
   const {id}=req.body;
   try {
     const question = await Question.findById(id);
     question.votes-=1;
     await question.save();
+
+     // 🔔 Send notification to question owner
+    if (question.user.toString() !== voterId) {
+      await sendNotification({
+     recipientId: question.user,
+     type: "vote",
+     message: "Your question received a downvote.",
+     link: `/question/${question._id}`,
+  });
+    }
     res.status(200).json({message:"Like decreased"});
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch question" });
