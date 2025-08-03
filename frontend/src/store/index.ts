@@ -5,20 +5,22 @@ interface User {
     name: string;
     userId?: string;
     email?: string;
-    role?: string;
-    isLoggedIn?: boolean;
+    role?: "user" | "admin";
+    isLoggedIn: boolean;
     profileImage: string;
 }
 
 interface AppState {
     user: User;
-    setUser: (newUser: User) => void;
+    setUser: (newUser: Partial<User> & { name: string }) => void;
+    updateUser: (updates: Partial<User>) => void;
     clearUser: () => void;
+    isAuthenticated: () => boolean;
 }
 
 export const useAppStore = create<AppState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             user: {
                 name: "",
                 userId: undefined,
@@ -30,12 +32,17 @@ export const useAppStore = create<AppState>()(
             setUser: (newUser) =>
                 set({
                     user: {
-                        name: newUser.name ?? "",
-                        userId: newUser.userId,
-                        email: newUser.email,
-                        role: newUser.role,
+                        ...get().user, // Preserve existing user data
+                        ...newUser, // Override with new data
+                        profileImage: newUser.profileImage || get().user.profileImage || "/profile.png",
                         isLoggedIn: newUser.isLoggedIn ?? true,
-                        profileImage: newUser.profileImage || "/profile.png",
+                    },
+                }),
+            updateUser: (updates) =>
+                set({
+                    user: {
+                        ...get().user,
+                        ...updates,
                     },
                 }),
             clearUser: () =>
@@ -49,6 +56,7 @@ export const useAppStore = create<AppState>()(
                         profileImage: "/profile.png",
                     },
                 })),
+            isAuthenticated: () => get().user.isLoggedIn,
         }),
         { name: "userStore" }
     )

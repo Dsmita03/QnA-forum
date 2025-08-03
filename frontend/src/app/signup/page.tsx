@@ -12,7 +12,7 @@ export default function Signup() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("user");
+    const [role, setRole] = useState<"user" | "admin">("user");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
@@ -39,6 +39,8 @@ export default function Signup() {
 
             if (res.status === 201) {
                 const data = res.data.user;
+                
+                // Set user in store with the updated interface
                 setUser({
                     userId: data.id,
                     name: data.name, 
@@ -46,7 +48,13 @@ export default function Signup() {
                     role: data.role,
                     isLoggedIn: true,
                 });
-                router.push("/");
+                
+                // Role-based redirect
+                if (data.role === "admin") {
+                    router.push("/admin");
+                } else {
+                    router.push("/");
+                }
             }
         } catch (err: any) {
             console.error(err);
@@ -91,7 +99,7 @@ export default function Signup() {
                                 User Name
                             </label>
                             <input
-                                type="text" // ✅ fixed type
+                                type="text"
                                 placeholder="Enter your name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
@@ -134,7 +142,7 @@ export default function Signup() {
                             </label>
                             <select
                                 value={role}
-                                onChange={(e) => setRole(e.target.value)}
+                                onChange={(e) => setRole(e.target.value as "user" | "admin")}
                                 className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 text-gray-700 bg-white"
                             >
                                 <option value="user">User</option>
