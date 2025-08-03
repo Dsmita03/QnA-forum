@@ -5,7 +5,17 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
+import QuestionCard from '@/components/QuestionCard';
+import axios from 'axios';
 import { 
   Users, 
   Activity, 
@@ -18,7 +28,10 @@ import {
   Clock,
   Shield,
   Database,
-  Sparkles
+  Sparkles,
+  Search,
+  Filter,
+  MessageSquare
 } from 'lucide-react';
 
 type Stat = {
@@ -29,14 +42,14 @@ type Stat = {
   color: string;
 };
 
-type Activity = {
-  id: number;
-  user: string;
-  action: string;
-  target: string;
-  time: string;
-  type: 'create' | 'update' | 'delete' | 'login';
-  priority: 'low' | 'medium' | 'high';
+type Question = {
+  id: string;
+  title: string;
+  answersCount: number;
+  tags: string[];
+  username: string;
+  createdAt: string;
+  views: number;
 };
 
 const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
@@ -75,120 +88,91 @@ const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
   </motion.div>
 );
 
-const ActivityItem = ({ activity, index }: { activity: Activity; index: number }) => {
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'create': return <Sparkles className="w-4 h-4 text-green-500" />;
-      case 'update': return <Settings className="w-4 h-4 text-blue-500" />;
-      case 'delete': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'login': return <Shield className="w-4 h-4 text-purple-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="group p-4 hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-200 border-l-4 border-transparent hover:border-orange-400"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-start space-x-3">
-          <div className="mt-1">
-            {getActivityIcon(activity.type)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="text-sm font-semibold text-gray-900">{activity.user}</span>
-              <Badge className={`text-xs px-2 py-0.5 ${getPriorityColor(activity.priority)}`}>
-                {activity.priority}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">{activity.action}</p>
-            <p className="text-xs text-gray-500">Target: {activity.target}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-400 mb-1">{activity.time}</p>
-          <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <Eye className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
- 
-
 export default function AdminPage() {
-  const [stats, setStats] = useState<Stat[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("latest");
+  const [totalAnswers, setTotalAnswers] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   const router = useRouter();
 
+  // Fetch all data
   useEffect(() => {
-    async function fetchDashboardData() {
+    const fetchData = async () => {
       try {
-        const [statsRes, activitiesRes] = await Promise.all([
-          fetch('/api/admin/stats'),
-          fetch('/api/admin/activities'),
-        ]);
+        setLoading(true);
+        // Fetch questions
+        const questionsRes = await axios.get("http://localhost:5001/api/questions", 
+          { withCredentials: true });
 
-        const [statsData, activitiesData] = await Promise.all([
-          statsRes.json(),
-          activitiesRes.json(),
-        ]);
+        const formattedQuestions = questionsRes.data.map((q: any) => ({
+          id: q._id,
+          title: q.title,
+          answersCount: q.answers ? q.answers.length : 0,
+          tags: q.tags || [],
+          username: q.user.email || "anonymous",
+          createdAt: q.createdAt,
+          views: q.views || 0,
+        }));
+
+        setQuestions(formattedQuestions);
+
+        // Calculate today's questions
+        const todayQuestions = formattedQuestions.filter(
+          (q: any) => new Date(q.createdAt).toDateString() === new Date().toDateString()
+        ).length;
 
         // Enhanced stats with icons and colors
-        const enhancedStats = statsData.map((stat: any, index: number) => ({
-          ...stat,
-          change: Math.floor(Math.random() * 20) - 10, // Mock change data
-          icon: [
-            // eslint-disable-next-line react/jsx-key
-            <Users className="w-6 h-6 text-white" />,
-            // eslint-disable-next-line react/jsx-key
-            <BarChart3 className="w-6 h-6 text-white" />,
-            // eslint-disable-next-line react/jsx-key
-            <TrendingUp className="w-6 h-6 text-white" />,
-            // eslint-disable-next-line react/jsx-key
-            <Database className="w-6 h-6 text-white" />
-          ][index % 4],
-          color: [
-            'bg-gradient-to-br from-blue-500 to-blue-600',
-            'bg-gradient-to-br from-purple-500 to-purple-600',
-            'bg-gradient-to-br from-green-500 to-green-600',
-            'bg-gradient-to-br from-orange-500 to-orange-600'
-          ][index % 4]
-        }));
-
-        // Enhanced activities with types and priorities
-        const enhancedActivities = activitiesData.map((activity: any) => ({
-          ...activity,
-          type: ['create', 'update', 'delete', 'login'][Math.floor(Math.random() * 4)],
-          priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]
-        }));
-
-        setStats(enhancedStats);
-        setActivities(enhancedActivities);
+     
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    fetchDashboardData();
+    fetchData();
   }, []);
+
+  // Filter and sort questions
+  const filteredQuestions = questions.filter((question) => {
+    if (!searchTerm.trim()) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      question.title.toLowerCase().includes(searchLower) ||
+      question.tags.some((tag) => tag.toLowerCase().includes(searchLower)) ||
+      question.username.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
+    switch (sortBy) {
+      case "popular":
+        return b.answersCount - a.answersCount;
+      case "newest":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "most-viewed":
+        return b.views - a.views;
+      case "unanswered":
+        if (a.answersCount === 0 && b.answersCount > 0) return -1;
+        if (a.answersCount > 0 && b.answersCount === 0) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
+  const sortOptions = [
+    { value: "latest", label: "Latest", icon: Clock },
+    { value: "newest", label: "Newest", icon: TrendingUp },
+    { value: "oldest", label: "Oldest", icon: Clock },
+    { value: "popular", label: "Most Popular", icon: TrendingUp },
+    { value: "most-viewed", label: "Most Viewed", icon: Eye },
+    { value: "unanswered", label: "Unanswered", icon: MessageSquare },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50">
@@ -229,14 +213,9 @@ export default function AdminPage() {
         ) : (
           <div className="space-y-8">
             {/* Stats Grid */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <StatCard key={stat.label} stat={stat} index={index} />
-              ))}
-            </section>
-
+         
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Recent Activity */}
+              {/* All Posts Section */}
               <div className="lg:col-span-2">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
@@ -245,35 +224,116 @@ export default function AdminPage() {
                 >
                   <Card className="overflow-hidden shadow-lg border-0 bg-white/70 backdrop-blur-sm">
                     <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-3">
                           <div className="p-2 bg-orange-100 rounded-lg">
-                            <Clock className="w-5 h-5 text-orange-600" />
+                            <MessageSquare className="w-5 h-5 text-orange-600" />
                           </div>
                           <div>
-                            <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
-                            <p className="text-sm text-gray-500">Latest system events</p>
+                            <h2 className="text-xl font-bold text-gray-800">All Posts</h2>
+                            <p className="text-sm text-gray-500">
+                              Monitor community questions ({sortedQuestions.length} total)
+                            </p>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline" className="hover:bg-orange-50">
-                          <Eye className="w-4 h-4 mr-2" />
-                          View All
-                        </Button>
+                      
+                      </div>
+
+                      {/* Search and Filter Controls */}
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            placeholder="Search posts..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 bg-white border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                          />
+                        </div>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-gray-200 focus:border-orange-500">
+                            <Filter className="w-4 h-4 mr-2" />
+                            <SelectValue placeholder="Sort by" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {sortOptions.map((option) => {
+                              const IconComponent = option.icon;
+                              return (
+                                <SelectItem key={option.value} value={option.value}>
+                                  <div className="flex items-center space-x-2">
+                                    <IconComponent className="w-4 h-4" />
+                                    <span>{option.label}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      <AnimatePresence>
-                        {activities.map((activity, index) => (
-                          <ActivityItem key={activity.id} activity={activity} index={index} />
-                        ))}
-                      </AnimatePresence>
+
+                    {/* Questions List */}
+                    <div className="max-h-[600px] overflow-y-auto">
+                      {searchTerm.trim() && (
+                        <div className="bg-orange-50 border-b border-orange-200 p-4">
+                          <p className="text-orange-800 text-sm font-medium">
+                            {filteredQuestions.length > 0
+                              ? `Found ${filteredQuestions.length} result${filteredQuestions.length !== 1 ? "s" : ""} for "${searchTerm}"`
+                              : `No results found for "${searchTerm}"`}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="p-4 space-y-4">
+                        <AnimatePresence>
+                          {sortedQuestions.length > 0 ? (
+                            sortedQuestions.map((question, index) => (
+                              <motion.div
+                                key={question.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ delay: index * 0.05 }}
+                              >
+                                <QuestionCard
+                                  id={question.id}
+                                  title={question.title}
+                                  answersCount={question.answersCount}
+                                  tags={question.tags}
+                                  username={question.username}
+                                  createdAt={question.createdAt}
+                                  views={question.views}
+                                />
+                              </motion.div>
+                            ))
+                          ) : (
+                            <div className="text-center py-12">
+                              <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-500">
+                                {searchTerm.trim() ? "No posts match your search" : "No posts available"}
+                              </p>
+                              {searchTerm.trim() && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSearchTerm("")}
+                                  className="mt-2"
+                                >
+                                  Clear Search
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </Card>
                 </motion.div>
               </div>
 
-              {/* Quick Actions */}
+              {/* Right Sidebar */}
               <div className="space-y-6">
+                {/* Quick Actions */}
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -285,42 +345,45 @@ export default function AdminPage() {
                       <h3 className="text-lg font-bold">Quick Actions</h3>
                     </div>
                     <div className="space-y-3">
-                    <Button 
-                    className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    variant="outline"
-                    onClick={() => router.push('/admin/manageUsers')}
-      >
-                   <Users className="w-4 h-4 mr-2" />
-                    Manage Users
-                  </Button>
-                   <Button 
-                    className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    variant="outline"
-                    onClick={() => router.push('/admin/flags')}
-                    >
-                   <AlertTriangle className="w-4 h-4 mr-2" />
-                   Review Flags
-                 </Button>
-                 <Button 
-                 className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    variant="outline"
-                 onClick={() => router.push('/admin/analytics')}
-                  >
-                 <BarChart3 className="w-4 h-4 mr-2" />
-                  Analytics
-                </Button>
-                 </div>
-
+                      <Button 
+                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                        variant="outline"
+                        onClick={() => router.push('/admin/manageUsers')}
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Manage Users
+                      </Button>
+                      <Button 
+                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                        variant="outline"
+                        onClick={() => router.push('/admin/flags')}
+                      >
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        Review Flags
+                      </Button>
+                      <Button 
+                        className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                        variant="outline"
+                        onClick={() => router.push('/admin/analytics')}
+                      >
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Analytics
+                      </Button>
+                    </div>
                   </Card>
                 </motion.div>
 
+                {/* System Health */}
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 }}
                 >
                   <Card className="p-6 bg-white shadow-lg">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">System Health</h3>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <Shield className="w-5 h-5 text-gray-700" />
+                      <h3 className="text-lg font-bold text-gray-800">System Health</h3>
+                    </div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Server Status</span>
@@ -333,6 +396,10 @@ export default function AdminPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">API Response</span>
                         <Badge className="bg-yellow-100 text-yellow-800">245ms</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Active Users</span>
+                        <Badge className="bg-blue-100 text-blue-800">{Math.floor(totalUsers * 0.1)}</Badge>
                       </div>
                     </div>
                   </Card>
