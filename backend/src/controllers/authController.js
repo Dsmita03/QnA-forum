@@ -120,7 +120,7 @@ export const login = async (req, res) => {
 
 export const getTotalNoOfUsers = async (req, res) => {
     try {
-        const count = await User.countDocuments();
+        const count = await User.countDocuments({role:"user"});
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch user count" });
