@@ -2,7 +2,7 @@
 'use client';
 import { useRouter } from 'next/navigation'; 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -15,11 +15,10 @@ import {
 } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuestionCard from '@/components/QuestionCard';
+import { useAppStore } from '@/store';
 import axios from 'axios';
 import { 
   Users, 
-  Activity, 
-  TrendingUp, 
   AlertTriangle, 
   Settings, 
   Eye,
@@ -27,20 +26,11 @@ import {
   BarChart3,
   Clock,
   Shield,
-  Database,
-  Sparkles,
   Search,
   Filter,
-  MessageSquare
+  MessageSquare,
+  TrendingUp
 } from 'lucide-react';
-
-type Stat = {
-  label: string;
-  value: number;
-  change?: number;
-  icon: React.ReactNode;
-  color: string;
-};
 
 type Question = {
   id: string;
@@ -52,56 +42,46 @@ type Question = {
   views: number;
 };
 
-const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-  >
-    <Card className={`relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${stat.color}`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-      <CardContent className="p-6 relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-white/20 backdrop-blur-sm`}>
-            {stat.icon}
-          </div>
-          {stat.change && (
-            <Badge 
-              variant={stat.change > 0 ? "default" : "destructive"}
-              className="text-xs font-medium"
-            >
-              {stat.change > 0 ? '+' : ''}{stat.change}%
-            </Badge>
-          )}
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-white/80">{stat.label}</p>
-          <p className="text-3xl font-bold text-white">{stat.value.toLocaleString()}</p>
-        </div>
-        <div className="absolute -bottom-2 -right-2 opacity-10 group-hover:opacity-20 transition-opacity">
-          <div className="text-6xl">
-            {stat.icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-
 export default function AdminPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("latest");
-  const [totalAnswers, setTotalAnswers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const router = useRouter();
+  
+  // Get user data from store
+  const { user, isAuthenticated } = useAppStore();
+
+  // Authentication check
+  useEffect(() => {
+    if (!isAuthenticated() || user.role !== 'admin') {
+      router.push('/login');
+      return;
+    }
+  }, [user, isAuthenticated, router]);
+
+  // If not admin, show loading or redirect
+  if (!isAuthenticated() || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch all data
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         // Fetch questions
         const questionsRes = await axios.get("http://localhost:5001/api/questions", 
           { withCredentials: true });
@@ -118,15 +98,19 @@ export default function AdminPage() {
 
         setQuestions(formattedQuestions);
 
-        // Calculate today's questions
-        const todayQuestions = formattedQuestions.filter(
-          (q: any) => new Date(q.createdAt).toDateString() === new Date().toDateString()
-        ).length;
+        // Fetch users count
+        try {
+          const usersRes = await axios.get("http://localhost:5001/api/admin/users/count", 
+            { withCredentials: true });
+          setTotalUsers(usersRes.data.count || 0);
+        } catch (userError) {
+          console.warn('Could not fetch users count:', userError);
+          setTotalUsers(0);
+        }
 
-        // Enhanced stats with icons and colors
-     
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
+        setError('Failed to load dashboard data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -203,6 +187,16 @@ export default function AdminPage() {
           </div>
         </motion.div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
@@ -212,15 +206,13 @@ export default function AdminPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Stats Grid */}
-         
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* All Posts Section */}
               <div className="lg:col-span-2">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.2 }}
                 >
                   <Card className="overflow-hidden shadow-lg border-0 bg-white/70 backdrop-blur-sm">
                     <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b">
@@ -236,7 +228,6 @@ export default function AdminPage() {
                             </p>
                           </div>
                         </div>
-                      
                       </div>
 
                       {/* Search and Filter Controls */}
@@ -337,7 +328,7 @@ export default function AdminPage() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.3 }}
                 >
                   <Card className="p-6 bg-gradient-to-br from-orange-500 to-pink-500 text-white shadow-lg">
                     <div className="flex items-center space-x-3 mb-4">
@@ -377,7 +368,7 @@ export default function AdminPage() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.4 }}
                 >
                   <Card className="p-6 bg-white shadow-lg">
                     <div className="flex items-center space-x-3 mb-4">
