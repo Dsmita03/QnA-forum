@@ -36,13 +36,22 @@ export default function Login() {
             if (res.status === 200) {
                 console.log(res.data);
                 const data = res.data.user;
+                
+                // Set user in store with complete user data
                 setUser({
                     name: data.name,
                     userId: data.id,
+                    email: data.email,  
                     role: data.role,
                     isLoggedIn: true,
                 });
-                router.push("/");
+                
+                // Role-based redirect (same as signup)
+                if (data.role === "admin") {
+                    router.push("/admin");
+                } else {
+                    router.push("/");
+                }
             }
         } catch (err: any) {
             console.error(err);
