@@ -13,7 +13,7 @@ const { questionId, content, userId } = req.body;
       senderId: req.user.id,
       referenceId: answer._id,
       type: "answer",
-      message: `${req.user.username || 'Someone'} answered your question: "${answer.content.substring(0, 20)}"`
+      message: `${req.user.username || 'Someone'} answered your question: "${question.title}"`
     });
 
     res.status(201).json(answer);

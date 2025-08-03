@@ -158,7 +158,7 @@ export default function Navbar() {
         setUser({
             name: "",
             email: "",
-            role: "",
+            role: undefined,
             userId: "",
             isLoggedIn: false,
             profileImage: "",
