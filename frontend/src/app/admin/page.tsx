@@ -29,7 +29,8 @@ import {
   Search,
   Filter,
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  LogOut
 } from 'lucide-react';
 
 type Question = {
@@ -43,18 +44,47 @@ type Question = {
 };
 
 export default function AdminPage() {
+  // ALL HOOKS MUST BE DECLARED FIRST
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [totalUsers, setTotalUsers] = useState(0);
+  const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
   
   // Get user data from store
-  const { user, isAuthenticated } = useAppStore();
+  const { user, isAuthenticated, setUser } = useAppStore();
 
-  // Authentication check
+  // Modified Logout function using localStorage
+  const handleLogout = () => {
+    try {
+      setLoggingOut(true);
+      
+      // Remove token from localStorage
+      localStorage.removeItem("token");
+      
+      // Clear user data using setUser with proper structure
+      setUser({
+        name: "",
+        email: "",
+        role: undefined,
+        userId: "",
+        isLoggedIn: false,
+        profileImage: "/profile.png",
+      });
+      
+      // Redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  // Authentication check useEffect
   useEffect(() => {
     if (!isAuthenticated() || user.role !== 'admin') {
       router.push('/login');
@@ -62,22 +92,14 @@ export default function AdminPage() {
     }
   }, [user, isAuthenticated, router]);
 
-  // If not admin, show loading or redirect
-  if (!isAuthenticated() || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Checking permissions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Fetch all data
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Data fetching useEffect
   useEffect(() => {
     const fetchData = async () => {
+      // Only fetch if authenticated and admin
+      if (!isAuthenticated() || user.role !== 'admin') {
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -117,7 +139,7 @@ export default function AdminPage() {
     };
 
     fetchData();
-  }, []);
+  }, [isAuthenticated, user.role]);
 
   // Filter and sort questions
   const filteredQuestions = questions.filter((question) => {
@@ -158,6 +180,18 @@ export default function AdminPage() {
     { value: "unanswered", label: "Unanswered", icon: MessageSquare },
   ];
 
+  // Early return AFTER all hooks
+  if (!isAuthenticated() || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50">
       <main className="max-w-7xl mx-auto px-6 py-10">
@@ -182,6 +216,26 @@ export default function AdminPage() {
               <Button variant="outline" size="sm">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
+              </Button>
+              {/* Logout Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+              >
+                {loggingOut ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mr-2"></div>
+                    Logging out...
+                  </div>
+                ) : (
+                  <>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </>
+                )}
               </Button>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
-import { Bell, LogOut, Menu, X, User, Settings } from "lucide-react";
+import { Bell, LogOut, Menu, X, User} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/store";
@@ -86,6 +86,7 @@ export default function Navbar() {
                     { withCredentials: true }
                 );
                 setNotifications(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     res.data.map((notif: any) => ({
                         ...notif,
                         id: notif._id, // Adds id property
@@ -350,13 +351,13 @@ export default function Navbar() {
                                     >
                                         <User className="w-4 h-4" /> My Profile
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         href="/admin"
                                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
                                     >
                                         <Settings className="w-4 h-4" /> Admin
                                         Panel
-                                    </Link>
+                                    </Link> */}
                                 </div>
 
                                 <div className="border-t border-gray-100">
