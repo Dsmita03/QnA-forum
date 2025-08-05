@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 import {
     Mail,
     Ban,
@@ -18,11 +20,13 @@ import {
     Briefcase,
     HelpCircle,
     User,
+    XCircle,
     Settings,
     Shield,
     MessageSquare,
-    XCircle,
     Bell,
+    Loader2,
+    AlertTriangle,
 } from "lucide-react";
 import axios from "axios";
 
@@ -48,11 +52,17 @@ export default function ManageUsersPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [page, setPage] = useState(1);
+    const [loadingActions, setLoadingActions] = useState<{ [key: string]: boolean }>({});
+    
+    // Confirmation Modal States
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [confirmAction, setConfirmAction] = useState<'notify' | 'email' | null>(null);
+    
     const itemsPerPage = 5;
 
     // Filter to show only users with role "user" (exclude admins)
     const filteredUsers = users.filter((user) => {
-        // Only show users with role "user"
         if (user.role !== "user") return false;
         
         const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase());
@@ -77,15 +87,30 @@ export default function ManageUsersPage() {
              withCredentials: true
            });
            const data = response.data;
-           console.log(data);
            setUsers(data);
          } catch (error) {
            console.error("Error fetching users:", error);
+           toast.error("Failed to fetch users");
          }
        }
 
        getAllUsers();
     }, []);
+
+    // Prevent background scroll when modal is open
+    useEffect(() => {
+        document.body.style.overflow = showConfirmModal ? "hidden" : "";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [showConfirmModal]);
+
+    const setActionLoading = (userId: string, action: string, loading: boolean) => {
+        setLoadingActions(prev => ({
+            ...prev,
+            [`${userId}-${action}`]: loading
+        }));
+    };
 
     const toggleBan = async (id: string) => {
         // Optimistically update UI
@@ -114,15 +139,109 @@ export default function ManageUsersPage() {
         }
     };
 
-    const sendNotification = (id: string) => {
-        // Call API to send notification
-        alert(`Notification sent to user ${id}`);
+
+    const openConfirmModal = (user: User, action: 'notify' | 'email') => {
+        setSelectedUser(user);
+        setConfirmAction(action);
+        setShowConfirmModal(true);
     };
 
-    const sendEmail = (id: string) => {
-        // Call API to send email
-        alert(`Email sent to user ${id}`);
+    const closeConfirmModal = () => {
+        setShowConfirmModal(false);
+        setSelectedUser(null);
+        setConfirmAction(null);
     };
+
+    const handleConfirmedAction = async () => {
+        if (!selectedUser || !confirmAction) return;
+
+        if (confirmAction === 'notify') {
+            await sendNotification(selectedUser._id);
+        } else if (confirmAction === 'email') {
+            await sendEmail(selectedUser._id);
+        }
+        
+        closeConfirmModal();
+    };
+
+    const sendNotification = async (id: string) => {
+        setActionLoading(id, 'notify', true);
+        
+        try {
+            // Simulate API call - replace with your actual notification API
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const user = users.find(u => u._id === id);
+            toast.success(`📢 Notification sent successfully to ${user?.name}!`);
+            
+        } catch (error: any) {
+            console.error("Error sending notification:", error);
+            toast.error("Failed to send notification");
+        } finally {
+            setActionLoading(id, 'notify', false);
+        }
+    };
+
+    const sendEmail = async (id: string) => {
+        setActionLoading(id, 'email', true);
+        
+        try {
+            const user = users.find(u => u._id === id);
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            const response = await axios.post(
+                `http://localhost:5001/api/email/send-admin-email`,
+                {
+                    userId: id,
+                    userEmail: user.email,
+                    userName: user.name,
+                    subject: "Important Notice from Admin",
+                    message: `Dear ${user.name},\n\nWe hope this message finds you well. This is an important notice from the administration team.\n\nIf you have any questions or concerns, please don't hesitate to contact our support team.\n\nBest regards,\nAdmin Team`
+                },
+                { withCredentials: true }
+            );
+            
+            if (response.data.success) {
+                toast.success(`📧 Email sent successfully to ${user.email}!`);
+            } else {
+                throw new Error(response.data.message || "Failed to send email");
+            }
+        } catch (error: any) {
+            console.error("Error sending email:", error);
+            const errorMessage = error.response?.data?.message || error.message || "Failed to send email";
+            toast.error(`Error: ${errorMessage}`);
+        } finally {
+            setActionLoading(id, 'email', false);
+        }
+    };
+
+    const getConfirmationContent = () => {
+        if (!selectedUser || !confirmAction) return null;
+
+        if (confirmAction === 'notify') {
+            return {
+                icon: <Bell className="w-6 h-6 text-blue-500" />,
+                title: "Send Notification",
+                message: `Are you sure you want to send a notification to ${selectedUser.name}?`,
+                description: "This will send an in-app notification to the user.",
+                confirmText: "Send Notification",
+                confirmClass: "bg-blue-500 hover:bg-blue-600"
+            };
+        } else {
+            return {
+                icon: <Mail className="w-6 h-6 text-purple-500" />,
+                title: "Send Email",
+                message: `Are you sure you want to send an email to ${selectedUser.name}?`,
+                description: `This will send an administrative email to ${selectedUser.email}.`,
+                confirmText: "Send Email",
+                confirmClass: "bg-purple-500 hover:bg-purple-600"
+            };
+        }
+    };
+
+    const confirmContent = getConfirmationContent();
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 px-6 py-10">
@@ -300,13 +419,16 @@ export default function ManageUsersPage() {
                                                             onClick={() => toggleBan(user._id)}
                                                             size="sm"
                                                             variant="outline"
+                                                            disabled={loadingActions[`${user._id}-ban`]}
                                                             className={`${
                                                                 user.isBanned 
                                                                     ? 'text-green-600 border-green-300 hover:bg-green-50 hover:border-green-400' 
                                                                     : 'text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400'
-                                                            } transition-all duration-200 shadow-sm hover:shadow-md`}
+                                                            } transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50`}
                                                         >
-                                                            {user.isBanned ? (
+                                                            {loadingActions[`${user._id}-ban`] ? (
+                                                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                            ) : user.isBanned ? (
                                                                 <CheckCircle className="w-4 h-4 mr-1" />
                                                             ) : (
                                                                 <Ban className="w-4 h-4 mr-1" />
@@ -314,21 +436,31 @@ export default function ManageUsersPage() {
                                                             {user.isBanned ? "Allow" : "Ban"}
                                                         </Button>
                                                         <Button
-                                                            onClick={() => sendNotification(user._id)}
+                                                            onClick={() => openConfirmModal(user, 'notify')}
                                                             size="sm"
                                                             variant="outline"
-                                                            className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                            disabled={loadingActions[`${user._id}-notify`]}
+                                                            className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50"
                                                         >
-                                                            <Bell className="w-4 h-4 mr-1" />
+                                                            {loadingActions[`${user._id}-notify`] ? (
+                                                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                            ) : (
+                                                                <Bell className="w-4 h-4 mr-1" />
+                                                            )}
                                                             Notify
                                                         </Button>
                                                         <Button
-                                                            onClick={() => sendEmail(user._id)}
+                                                            onClick={() => openConfirmModal(user, 'email')}
                                                             size="sm"
                                                             variant="outline"
-                                                            className="text-purple-600 border-purple-300 hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                            disabled={loadingActions[`${user._id}-email`]}
+                                                            className="text-purple-600 border-purple-300 hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50"
                                                         >
-                                                            <Mail className="w-4 h-4 mr-1" />
+                                                            {loadingActions[`${user._id}-email`] ? (
+                                                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                            ) : (
+                                                                <Mail className="w-4 h-4 mr-1" />
+                                                            )}
                                                             Email
                                                         </Button>
                                                     </div>
@@ -379,6 +511,54 @@ export default function ManageUsersPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Simple Confirmation Modal */}
+            {showConfirmModal && confirmContent && (
+                <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-orange-100">
+                        <div className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="p-3 bg-gray-100 rounded-full">
+                                    {confirmContent.icon}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                        {confirmContent.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        {confirmContent.description}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                                <div className="flex items-start gap-2">
+                                    <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <p className="text-orange-800 text-sm font-medium">
+                                        {confirmContent.message}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+                            <Button
+                                variant="outline"
+                                onClick={closeConfirmModal}
+                                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleConfirmedAction}
+                                className={`text-white shadow-md ${confirmContent.confirmClass}`}
+                            >
+                                {confirmContent.confirmText}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
