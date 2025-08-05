@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Breadcrumb from "@/components/Breadcrumb";
 import AnswerItem from "@/components/AnswerItem";
 import { RichTextEditor } from "@/components/RichTextEditor";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { Lock } from "lucide-react";
 import axios from "axios";
 import { useAppStore } from "@/store";
 
@@ -17,8 +17,6 @@ interface Question {
   description: string;
   tags: string[];
   answers: never[];
-  likes?: number;     // <-- for Like count
-  dislikes?: number;  // <-- for Dislike count
 }
 
 interface Props {
@@ -44,28 +42,24 @@ export default function QuestionPage({ params }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [validationError, setValidationError] = useState("");
-  // Like/Dislike toggle logic (like YouTube, not aggregate math)
-  const [likeActive, setLikeActive] = useState(false);
-  const [dislikeActive, setDislikeActive] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [dislikeCount, setDislikeCount] = useState(0);
 
   const user = useAppStore((state) => state.user);
+  
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
 
   // Prevent background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "";
   }, [showModal]);
 
-  // Fetch question and init voting counts
+  // Fetch question
   useEffect(() => {
     const getQuestionbyId = async () => {
       const response = await axios.get(
         `http://localhost:5001/api/questions/${id}`,{withCredentials: true}
       );
       setQuestion(response.data);
-      setLikeCount(response.data?.likes ?? 0);
-      setDislikeCount(response.data?.dislikes ?? 0);
     };
     getQuestionbyId();
   }, [id]);
@@ -129,34 +123,9 @@ export default function QuestionPage({ params }: Props) {
     setValidationError("");
   };
 
-  // --- Like/Dislike logic (no minus math, just action toggle) ---
-  const handleLike = () => {
-    if (likeActive) {
-      setLikeActive(false);
-      setLikeCount((c) => c - 1);
-    } else {
-      setLikeActive(true);
-      setLikeCount((c) => c + 1);
-      if (dislikeActive) {
-        setDislikeActive(false);
-        setDislikeCount((c) => c - 1);
-      }
-    }
-    // Optionally: update like/dislike to backend
-  };
-  const handleDislike = () => {
-    if (dislikeActive) {
-      setDislikeActive(false);
-      setDislikeCount((c) => c - 1);
-    } else {
-      setDislikeActive(true);
-      setDislikeCount((c) => c + 1);
-      if (likeActive) {
-        setLikeActive(false);
-        setLikeCount((c) => c - 1);
-      }
-    }
-    // Optionally: update like/dislike to backend
+  // Handle admin click on restricted button
+  const handleAdminRestriction = () => {
+    toast.info("Administrators can only moderate answers, not create them.");
   };
 
   if (!question) {
@@ -178,37 +147,9 @@ export default function QuestionPage({ params }: Props) {
       />
 
       {/* Question Area */}
-      <section className="flex flex-col md:flex-row bg-white rounded-xl shadow-md p-6 md:gap-8 gap-4 border border-orange-100 relative">
-        {/* Voting */}
-        <aside className="flex flex-col items-center mr-1 min-w-[52px]">
-          <button
-            aria-label="Like"
-            onClick={handleLike}
-            className={`p-2 rounded-full mb-1.5 transition-colors ${
-              likeActive
-                ? "bg-green-50 text-green-600"
-                : "text-gray-400 hover:text-green-600 hover:bg-green-50"
-            }`}
-          >
-            <ThumbsUp className="w-5 h-5" />
-          </button>
-          <span className="text-xs text-gray-700">{likeCount}</span>
-          <button
-            aria-label="Dislike"
-            onClick={handleDislike}
-            className={`p-2 rounded-full transition-colors ${
-              dislikeActive
-                ? "bg-red-50 text-red-600"
-                : "text-gray-400 hover:text-red-600 hover:bg-red-50"
-            }`}
-          >
-            <ThumbsDown className="w-5 h-5" />
-          </button>
-          <span className="text-xs text-gray-700">{dislikeCount}</span>
-        </aside>
-        {/* Content */}
-        <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap gap-2 mb-2">
+      <section className="bg-white rounded-xl shadow-md p-6 border border-orange-100">
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 mb-3">
             {question.tags.map((tag) => (
               <Badge
                 key={tag}
@@ -218,14 +159,13 @@ export default function QuestionPage({ params }: Props) {
               </Badge>
             ))}
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
             {question.title}
           </h1>
           <div
-            className="text-gray-700 leading-relaxed prose max-w-none mb-2"
+            className="text-gray-700 leading-relaxed prose max-w-none"
             dangerouslySetInnerHTML={{ __html: question.description }}
           />
-          <div className="text-sm text-gray-500 mt-1"></div>
         </div>
       </section>
 
@@ -238,12 +178,25 @@ export default function QuestionPage({ params }: Props) {
               {answers.length}
             </span>
           </h2>
-          <Button
-            onClick={() => setShowModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white shadow-md flex items-center gap-2"
-          >
-            ✍️ Add Answer
-          </Button>
+          {/* Conditional rendering based on user role */}
+          {!isAdmin ? (
+            <Button
+              onClick={() => setShowModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white shadow-md flex items-center gap-2"
+            >
+              ✍️ Add Answer
+            </Button>
+          ) : (
+            <Button
+              onClick={handleAdminRestriction}
+              variant="outline"
+              className="border-gray-300 text-gray-500 cursor-not-allowed flex items-center gap-2 hover:bg-gray-50"
+              disabled
+            >
+              <Lock className="w-4 h-4" />
+              User Access Only
+            </Button>
+          )}
         </div>
 
         <div className="space-y-6 mt-4">
@@ -252,12 +205,25 @@ export default function QuestionPage({ params }: Props) {
               <p className="text-gray-500 text-base mb-3">
                 No answers yet. Be the first to help!
               </p>
-              <Button
-                onClick={() => setShowModal(true)}
-                className="mt-1 bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                Write the First Answer
-              </Button>
+              {/* Conditional rendering for empty state button */}
+              {!isAdmin ? (
+                <Button
+                  onClick={() => setShowModal(true)}
+                  className="mt-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  Write the First Answer
+                </Button>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Lock className="w-4 h-4" />
+                    <span className="text-sm">Answer creation restricted for administrators</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Administrators can moderate but not create answers
+                  </p>
+                </div>
+              )}
             </div>
           )}
           {answers.map((ans, idx) => (
@@ -271,8 +237,8 @@ export default function QuestionPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Answer Modal */}
-      {showModal && (
+      {/* Answer Modal - Only render if user is not admin */}
+      {showModal && !isAdmin && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-hidden border border-orange-100">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-orange-100">

@@ -1,6 +1,5 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
@@ -13,7 +12,7 @@ import { PiTextBBold, PiTextItalic, PiTextStrikethrough } from 'react-icons/pi';
 import { IoList } from 'react-icons/io5';
 import { HiNumberedList } from 'react-icons/hi2';
 import { CiTextAlignCenter, CiTextAlignLeft, CiTextAlignRight } from 'react-icons/ci';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
