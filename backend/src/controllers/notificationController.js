@@ -51,3 +51,47 @@ export const getNotifications = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch notifications" });
   }
 };
+// Mark single notification as read
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, recipientId: userId },
+      { seen: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    res.status(200).json({ 
+      message: "Notification marked as read", 
+      notification 
+    });
+  } catch (err) {
+    console.error("Error marking notification as read:", err);
+    res.status(500).json({ error: "Failed to mark notification as read" });
+  }
+};
+// Mark all notifications as read
+export const markAllNotificationsAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const result = await Notification.updateMany(
+      { recipientId: userId, seen: false },
+      { seen: true }
+    );
+
+    res.status(200).json({ 
+      message: "All notifications marked as read",
+      modifiedCount: result.modifiedCount
+    });
+  } catch (err) {
+    console.error("Error marking all notifications as read:", err);
+    res.status(500).json({ error: "Failed to mark all notifications as read" });
+  }
+};

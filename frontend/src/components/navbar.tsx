@@ -3,418 +3,423 @@
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
-import { Bell, LogOut, Menu, X, User} from "lucide-react";
+import { Bell, LogOut, Menu, X, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/store";
 import { toast } from "sonner";
-import { initSocket } from "../lib/socket";
+import { initSocket } from "@/lib/socket";
+import NotificationsModal from "@/components/NotificationsModal";
 
 interface Notification {
-    id: string;
-    message: string;
-    createdAt: string;
-    seen: boolean;
+  id: string;
+  message: string;
+  createdAt: string | number | Date;
+  seen: boolean;
 }
 
 export default function Navbar() {
-    const pathname = usePathname();
-    const router = useRouter();
-    const user = useAppStore((state) => state.user);
-    const setUser = useAppStore((state) => state.setUser);
-    const [showNotifications, setShowNotifications] = useState(false);
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
-    const [showMobileMenu, setShowMobileMenu] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const notificationRef = useRef<HTMLDivElement>(null);
-    const profileRef = useRef<HTMLDivElement>(null);
+  /* ------------------------------------------------------------------ */
+  /* STATE & REFS                                                       */
+  /* ------------------------------------------------------------------ */
+  const pathname = usePathname();
+  const router = useRouter();
+  const user = useAppStore((s) => s.user);
+  const setUser = useAppStore((s) => s.setUser);
 
-    // Load user profile on mount
-    useEffect(() => {
-        const fetchProfile = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) return;
-            try {
-                const res = await axios.get("/api/auth/profile", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = res.data;
-                setUser({
-                    name: data.name || "User",
-                    email: data.email,
-                    role: data.role,
-                    userId: data.id,
-                    isLoggedIn: true,
-                    profileImage: data.profileImage || "/profile.png",
-                });
-            } catch (err) {
-                console.error("Failed to fetch profile:", err);
-            }
-        };
-        if (!user.isLoggedIn) {
-            fetchProfile();
-        }
-    }, [user.isLoggedIn, setUser]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAllModal, setShowAllModal] = useState(false);
 
-    // ----- SOCKET.IO IMPLEMENTATION -----
-    useEffect(() => {
-        if (!user?.isLoggedIn || !user.userId) return;
-        const socket = initSocket(user.userId);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-        // Handler for incoming notifications
-        const handleNewNotification = (data: Notification) => {
-            setNotifications((prev) => [data, ...prev]);
-            toast(`🔔 ${data.message}`, {
-                // No action, as 'link' field is absent per your backend
-            });
-        };
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
-        socket.on("notification", handleNewNotification); // event is `notification` per your backend
+  /* ------------------------------------------------------------------ */
+  /* LOAD USER PROFILE (once)                                           */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (user.isLoggedIn) return;
 
-        return () => {
-            socket.off("notification", handleNewNotification);
-            socket.disconnect();
-        };
-    }, [user.userId, user.isLoggedIn, toast]);
-
-    useEffect(() => {
-        if (!user.isLoggedIn || !user.userId) return;
-        async function fetchNotifications() {
-            try {
-                const res = await axios.get(
-                    "http://localhost:5001/api/notifications",
-                    { withCredentials: true }
-                );
-                setNotifications(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    res.data.map((notif: any) => ({
-                        ...notif,
-                        id: notif._id, // Adds id property
-                    }))
-                );
-            } catch (error) {
-                console.error("Failed to fetch notifications:", error);
-            }
-        }
-        fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(intervalId);
-    }, [user.isLoggedIn, user.userId]);
-
-    // Close dropdowns on outside clicks
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                notificationRef.current &&
-                !notificationRef.current.contains(event.target as Node)
-            ) {
-                setShowNotifications(false);
-            }
-            if (
-                profileRef.current &&
-                !profileRef.current.contains(event.target as Node)
-            ) {
-                setShowProfileMenu(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    // Number of unread notifications
-    const unreadCount = notifications.filter((n) => !n.seen).length;
-
-    // Mark a notification as read and update state
-    async function markAsRead(notificationId: string) {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) return;
-            await axios.patch(
-                `/api/notifications/${notificationId}/mark-read`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setNotifications((prevNotifications) =>
-                prevNotifications.map((n) =>
-                    n.id === notificationId ? { ...n, seen: true } : n
-                )
-            );
-        } catch (err) {
-            console.error("Error marking notification as read:", err);
-        }
-    }
-
-    // On notification click, mark read and navigate to link (if any)
-    async function handleNotificationClick(notification: Notification) {
-        if (!notification.seen) {
-            await markAsRead(notification.id);
-        }
-        setShowNotifications(false);
-    }
-
-    // User logout handler
-    function handleLogout() {
-        localStorage.removeItem("token");
-        setUser({
-            name: "",
-            email: "",
-            role: undefined,
-            userId: "",
-            isLoggedIn: false,
-            profileImage: "",
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const { data } = await axios.get("/api/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        router.push("/login");
+        setUser({
+          name: data.name || "User",
+          email: data.email,
+          role: data.role,
+          userId: data.id,
+          isLoggedIn: true,
+          profileImage: data.profileImage || "/profile.png",
+        });
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [setUser, user.isLoggedIn]);
+
+  /* ------------------------------------------------------------------ */
+  /* SOCKET.IO – live notifications                                     */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!user.isLoggedIn || !user.userId) return;
+
+    const socket = initSocket(user.userId);
+
+    const handleNewNotification = (data: Notification) => {
+      setNotifications((prev) => [data, ...prev]);
+      toast(`🔔 ${data.message}`);
+    };
+
+    socket.on("notification", handleNewNotification);
+
+    return () => {
+      socket.off("notification", handleNewNotification);
+      socket.disconnect();
+    };
+  }, [user.userId, user.isLoggedIn]);
+
+  /* ------------------------------------------------------------------ */
+  /* POLL NOTIFICATION LIST EVERY 60 s                                   */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!user.isLoggedIn) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get("http://localhost:5001/api/notifications", {
+          withCredentials: true,
+        });
+        setNotifications(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          res.data.map((n: any) => ({ ...n, id: n._id })) // normalise _id ➜ id
+        );
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      }
+    };
+
+    fetchNotifications();
+    const id = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(id);
+  }, [user.isLoggedIn]);
+
+  /* ------------------------------------------------------------------ */
+  /* CLICK-OUTSIDE TO CLOSE MENUS                                       */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    const closeOnOutside = (e: MouseEvent) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(e.target as Node)
+      ) {
+        setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", closeOnOutside);
+    return () => document.removeEventListener("mousedown", closeOnOutside);
+  }, []);
+
+  /* ------------------------------------------------------------------ */
+  /* HELPERS                                                            */
+  /* ------------------------------------------------------------------ */
+  const unreadCount = notifications.filter((n) => !n.seen).length;
+
+  const markAsRead = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      // optimistic UI
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, seen: true } : n))
+      );
+      await axios.patch(
+        `/api/notifications/${id}/mark-read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
     }
+  };
 
-    return (
-        <nav className="bg-white shadow-md border-b border-orange-100 px-4 py-3 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-                {/* Logo */}
-                <Link href="/" className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">S</span>
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-                        StackIt
-                    </span>
-                </Link>
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      setNotifications((prev) => prev.map((n) => ({ ...n, seen: true }))); // optimistic
+      await axios.patch(
+        "/api/notifications/mark-all-read",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
+    }
+  };
 
-                {/* Desktop navigation */}
-                <div className="hidden lg:flex items-center space-x-6">
-                    <Link
-                        href="/"
-                        className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-                            pathname === "/"
-                                ? "text-orange-600 bg-orange-50"
-                                : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
-                        }`}
-                    >
-                        Home
-                    </Link>
-                    <Link
-                        href="/add-questions"
-                        className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-                            pathname === "/add-questions"
-                                ? "text-orange-600 bg-orange-50"
-                                : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
-                        }`}
-                    >
-                        Ask Question
-                    </Link>
+  const handleNotificationClick = async (n: Notification) => {
+    if (!n.seen) await markAsRead(n.id);
+    setShowNotifications(false);
+    // if you have links, navigate here
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser({
+      name: "",
+      email: "",
+      role: undefined,
+      userId: "",
+      isLoggedIn: false,
+      profileImage: "",
+    });
+    router.push("/login");
+  };
+
+  /* ------------------------------------------------------------------ */
+  /* RENDER                                                             */
+  /* ------------------------------------------------------------------ */
+  return (
+    <nav className="bg-white shadow-md border-b border-orange-100 px-4 py-3 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* ------------------------------------------------ Logo ---------- */}
+        <Link href="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">S</span>
+          </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+            StackIt
+          </span>
+        </Link>
+
+        {/* --------------------------------------- Desktop Nav Links ------ */}
+        <div className="hidden lg:flex items-center space-x-6">
+          <Link
+            href="/"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+              pathname === "/"
+                ? "text-orange-600 bg-orange-50"
+                : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            href="/add-questions"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+              pathname === "/add-questions"
+                ? "text-orange-600 bg-orange-50"
+                : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+            }`}
+          >
+            Ask Question
+          </Link>
+        </div>
+
+        {/* ------------------ Right Side (Notifications + Profile + Burger) */}
+        <div className="flex items-center space-x-3">
+          {/* --------------------------- Notifications icon + dropdown ---- */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              aria-label="Notifications"
+              onClick={() => setShowNotifications((p) => !p)}
+              className="relative p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 bg-white border shadow-lg rounded-lg w-80 z-50 max-h-96 overflow-y-auto">
+                {/* header */}
+                <div className="sticky top-0 bg-white p-3 border-b border-gray-100 flex items-center justify-between">
+                  <h4 className="font-semibold text-gray-800">Notifications</h4>
+                  <button
+                    onClick={markAllAsRead}
+                    disabled={notifications.every((n) => n.seen)}
+                    className="text-xs font-medium text-orange-600 disabled:opacity-40"
+                  >
+                    Mark all read
+                  </button>
                 </div>
-
-                {/* Right side: notifications, profile and menu */}
-                <div className="flex items-center space-x-3">
-                    {/* Notifications */}
-                    <div className="relative" ref={notificationRef}>
-                        <button
-                            onClick={() =>
-                                setShowNotifications(!showNotifications)
-                            }
-                            className="relative p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                            aria-label="Notifications"
-                        >
-                            <Bell className="w-5 h-5" />
-                            {unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
-
-                        {/* Notifications Dropdown */}
-                        {showNotifications && (
-                            <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-80 border z-50 max-h-96 overflow-y-auto">
-                                <div className="sticky top-0 bg-white p-3 border-b border-gray-100">
-                                    <h4 className="font-semibold text-gray-800">
-                                        Notifications
-                                    </h4>
-                                </div>
-                                {notifications.length === 0 ? (
-                                    <div className="p-4 text-gray-500 text-sm">
-                                        No notifications
-                                    </div>
-                                ) : (
-                                    notifications.map((notification) => (
-                                        <div
-                                            key={notification.id}
-                                            className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-orange-50 flex items-start space-x-2 ${
-                                                !notification.seen
-                                                    ? "font-semibold"
-                                                    : "text-gray-600"
-                                            }`}
-                                            onClick={() =>
-                                                handleNotificationClick(
-                                                    notification
-                                                )
-                                            }
-                                        >
-                                            <span
-                                                className={`mt-2 h-2 w-2 rounded-full flex-shrink-0 ${
-                                                    !notification.seen
-                                                        ? "bg-orange-600"
-                                                        : "bg-gray-300"
-                                                }`}
-                                                aria-label={
-                                                    notification.seen
-                                                        ? "Seen"
-                                                        : "Unseen"
-                                                }
-                                            />
-                                            <div>
-                                                <p className="text-sm">
-                                                    {notification.message}
-                                                </p>
-                                                <time className="text-xs text-gray-400">
-                                                    {new Date(
-                                                        notification.createdAt
-                                                    ).toLocaleString()}
-                                                </time>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                                <div className="p-3 text-center">
-                                    <Link
-                                        href="/notifications"
-                                        onClick={() =>
-                                            setShowNotifications(false)
-                                        }
-                                        className="text-orange-600 hover:underline text-sm font-medium"
-                                    >
-                                        View all notifications
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Profile Menu */}
-                    <div className="relative" ref={profileRef}>
-                        <button
-                            onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className="flex items-center space-x-2 p-1 rounded-lg hover:bg-orange-50 transition-colors"
-                        >
-                            <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-orange-200">
-                                <Image
-                                    src={user.profileImage || "/profile.png"}
-                                    alt={user.name || "User"}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full"
-                                    unoptimized
-                                />
-                            </div>
-                            <div className="hidden sm:block text-left">
-                                <p className="text-sm font-medium text-gray-800">
-                                    {user.name || "Guest"}
-                                </p>
-                                <p className="text-xs text-gray-500 capitalize">
-                                    {user.role || "visitor"}
-                                </p>
-                            </div>
-                        </button>
-
-                        {showProfileMenu && (
-                            <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-56 border z-50 overflow-hidden">
-                                <div className="p-3 border-b border-gray-100">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-200">
-                                            <Image
-                                                src={
-                                                    user.profileImage ||
-                                                    "/profile.png"
-                                                }
-                                                alt={user.name || "User"}
-                                                width={40}
-                                                height={40}
-                                                className="rounded-full"
-                                                unoptimized
-                                            />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-800">
-                                                {user.name || "User"}
-                                            </p>
-                                            <p className="text-xs text-orange-600 capitalize">
-                                                {user.role || "visitor"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="py-1">
-                                    <Link
-                                        href="/profile"
-                                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                                    >
-                                        <User className="w-4 h-4" /> My Profile
-                                    </Link>
-                                    {/* <Link
-                                        href="/admin"
-                                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                                    >
-                                        <Settings className="w-4 h-4" /> Admin
-                                        Panel
-                                    </Link> */}
-                                </div>
-
-                                <div className="border-t border-gray-100">
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                    >
-                                        <LogOut className="w-4 h-4" /> Sign Out
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Mobile Menu Toggle */}
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-gray-500 text-sm">
+                    No notifications
+                  </div>
+                ) : (
+                  notifications.map((n) => (
                     <button
-                        onClick={() => setShowMobileMenu(!showMobileMenu)}
-                        className="lg:hidden p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
+                      key={n.id}
+                      onClick={() => handleNotificationClick(n)}
+                      className={`w-full text-left p-3 border-b border-gray-100 hover:bg-orange-50 flex items-start space-x-2 ${
+                        !n.seen ? "font-semibold" : "text-gray-600"
+                      }`}
                     >
-                        {showMobileMenu ? (
-                            <X className="w-5 h-5" />
-                        ) : (
-                            <Menu className="w-5 h-5" />
-                        )}
+                      <span
+                        className={`mt-2 h-2 w-2 rounded-full flex-shrink-0 ${
+                          n.seen ? "bg-gray-300" : "bg-orange-600"
+                        }`}
+                      />
+                      <div>
+                        <p className="text-sm">{n.message}</p>
+                        <time className="text-xs text-gray-400">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </time>
+                      </div>
                     </button>
+                  ))
+                )}
+                <div className="p-3 text-center">
+                  <button
+                    onClick={() => {
+                      setShowNotifications(false);
+                      setShowAllModal(true);
+                    }}
+                    className="text-orange-600 hover:underline text-sm font-medium"
+                  >
+                    View all notifications
+                  </button>
                 </div>
-            </div>
-
-            {/* Mobile Menu */}
-            {showMobileMenu && (
-                <div className="lg:hidden mt-4 pb-4 border-t border-gray-100 bg-white">
-                    <div className="flex flex-col space-y-2">
-                        <Link
-                            href="/"
-                            className={`px-4 py-2 text-sm font-medium rounded-lg block ${
-                                pathname === "/"
-                                    ? "text-orange-600 bg-orange-50"
-                                    : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
-                            }`}
-                            onClick={() => setShowMobileMenu(false)}
-                        >
-                            Home
-                        </Link>
-                        <Link
-                            href="/add-questions"
-                            className={`px-4 py-2 text-sm font-medium rounded-lg block ${
-                                pathname === "/add-questions"
-                                    ? "text-orange-600 bg-orange-50"
-                                    : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
-                            }`}
-                            onClick={() => setShowMobileMenu(false)}
-                        >
-                            Ask Question
-                        </Link>
-                    </div>
-                </div>
+              </div>
             )}
-        </nav>
-    );
+          </div>
+
+          {/* ------------------------------------- Profile dropdown ------ */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setShowProfileMenu((p) => !p)}
+              className="flex items-center space-x-2 p-1 rounded-lg hover:bg-orange-50 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-orange-200">
+                <Image
+                  src={user.profileImage || "/profile.png"}
+                  alt={user.name || "User"}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                  unoptimized
+                />
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium text-gray-800">
+                  {user.name || "Guest"}
+                </p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {user.role || "visitor"}
+                </p>
+              </div>
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-2 bg-white border shadow-lg rounded-lg w-56 z-50 overflow-hidden">
+                <div className="p-3 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-200">
+                      <Image
+                        src={user.profileImage || "/profile.png"}
+                        alt={user.name || "User"}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                        unoptimized
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {user.name || "User"}
+                      </p>
+                      <p className="text-xs text-orange-600 capitalize">
+                        {user.role || "visitor"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                  >
+                    <User className="w-4 h-4" /> My Profile
+                  </Link>
+                </div>
+
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ---------------------------------------- Mobile burger ------ */}
+          <button
+            onClick={() => setShowMobileMenu((p) => !p)}
+            className="lg:hidden p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
+          >
+            {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* ----------------------------------------- Mobile nav links ----- */}
+      {showMobileMenu && (
+        <div className="lg:hidden mt-4 pb-4 border-t border-gray-100 bg-white">
+          <div className="flex flex-col space-y-2">
+            <Link
+              href="/"
+              onClick={() => setShowMobileMenu(false)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg block ${
+                pathname === "/"
+                  ? "text-orange-600 bg-orange-50"
+                  : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/add-questions"
+              onClick={() => setShowMobileMenu(false)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg block ${
+                pathname === "/add-questions"
+                  ? "text-orange-600 bg-orange-50"
+                  : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+              }`}
+            >
+              Ask Question
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------- Full “All notifications” modal --- */}
+      <NotificationsModal
+        open={showAllModal}
+        onClose={() => setShowAllModal(false)}
+        notifications={notifications}
+        onItemClick={(n) => { void handleNotificationClick(n); }}
+        onMarkAllRead={markAllAsRead}
+      />
+    </nav>
+  );
 }
