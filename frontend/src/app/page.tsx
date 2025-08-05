@@ -93,7 +93,7 @@ export default function Home() {
                 const formatted = res.data.map((q: any) => ({
                     id: q._id,
                     title: q.title,
-                    answersCount: q.answers ? q.answers.length : 0,
+                    answersCount: q.answerCount,
                     tags: q.tags || [],
                     username: q.user.email || "anonymous",
                     createdAt: q.createdAt,

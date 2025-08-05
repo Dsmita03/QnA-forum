@@ -31,12 +31,44 @@ export const createQuestion = async (req, res) => {
 
 export const getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find()
-      .populate({
-        path: "user",      // 🔑 this matches the `user` field in your Question schema
-        select: "email",   // ✅ only get the `email` field from User
-      })
-      .sort({ createdAt: -1 });
+    const questions = await Question.aggregate([
+      {
+        $lookup: {
+          from: "answers", // collection name for Answer model
+          localField: "_id",
+          foreignField: "questionId",
+          as: "answers"
+        }
+      },
+      {
+        $lookup: {
+          from: "users", // collection name for User model
+          localField: "user",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+      {
+        $unwind: "$user"
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          description: 1,
+          tags: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          user: {
+            email: "$user.email"
+          },
+          answerCount: { $size: "$answers" }
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
 
     res.status(200).json(questions);
   } catch (err) {
@@ -44,6 +76,7 @@ export const getAllQuestions = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 };
+
 
 
 export const voteQuestion = async (req, res) => {
