@@ -19,10 +19,20 @@ A minimalist, modern Q&A platform built with **Next.js 14**, **Tailwind CSS**, *
 
 ### ⚙ Screenshots
 
-#### Home Page  
-<img src="snap/Screenshot 2025-07-12 at 4.50.29 PM.png" alt="Home Page" width="800" />
+#### Create Account Page  
+<img src="snap/create account.png" alt="Home Page" width="800" />
 
-> More screens coming soon...
+ 
+
+#### Home Page  
+<img src="snap/User HomePage.png" alt="Home Page" width="800" />
+
+#### Admin Home Page  
+<img src="snap/Admin Dashboard.png" alt="Home Page" width="800" />
+
+#### Analytics Page  
+<img src="snap/Analytics.png" alt="Home Page" width="800" />
+
 
 ---
 
@@ -33,7 +43,7 @@ A minimalist, modern Q&A platform built with **Next.js 14**, **Tailwind CSS**, *
 - **State Management**: Zustand  
 - **Rich Text Editor**: React Quill (or similar)  
 - **API Requests**: Axios  
-- **Backend (planned)**: Node.js / Express.js / Firebase  
+- **Backend**: Node.js ,Express.js  
 
 ---
 

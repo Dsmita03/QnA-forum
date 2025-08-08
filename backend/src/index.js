@@ -6,7 +6,6 @@ import { Server } from "socket.io";
 import mongoose from "mongoose";
 import questionrouter from "./routes/questionRoutes.js";
 import answerrouter from "./routes/answerRoutes.js";
-import commentRouter from "./routes/commentRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import uploadRouter from "./routes/uploadRoutes.js";
@@ -49,7 +48,6 @@ mongoose.connect(process.env.MONGO_URI)
 // ✅ Routes
 app.use("/api/questions", questionrouter);
 app.use("/api/answers", answerrouter);
-app.use("/api/comments", commentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/reports", reportRouter);

@@ -89,6 +89,7 @@ export default function Profile() {
             }
         };
 fetchProfile();
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
 
