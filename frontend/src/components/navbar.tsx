@@ -136,44 +136,58 @@ export default function Navbar() {
   /* ------------------------------------------------------------------ */
   const unreadCount = notifications.filter((n) => !n.seen).length;
 
-  const markAsRead = async (id: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      // optimistic UI
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, seen: true } : n))
-      );
-      await axios.patch(
-        `/api/notifications/${id}/mark-read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-    }
-  };
+  // const markAsRead = async (id: string) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) return;
+  //     // optimistic UI
+  //     setNotifications((prev) =>
+  //       prev.map((n) => (n.id === id ? { ...n, seen: true } : n))
+  //     );
+  //     await axios.patch(
+  //       `/api/notifications/${id}/mark-read`,
+  //       {},
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+  //   } catch (err) {
+  //     console.error("Error marking notification as read:", err);
+  //   }
+  // };
 
   const markAllAsRead = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      setNotifications((prev) => prev.map((n) => ({ ...n, seen: true }))); // optimistic
-      await axios.patch(
-        "/api/notifications/mark-all-read",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
+    // try {
+    //   // const token = localStorage.getItem("token");
+    //   if (!token) return;
+    //   setNotifications((prev) => prev.map((n) => ({ ...n, seen: true }))); // optimistic
+    //   await axios.patch(
+    //     "/api/notifications/mark-all-read",
+    //     {},
+    //     { headers: { Authorization: `Bearer ${token}` } }
+    //   );
+    // } catch (err) {
+    //   console.error("Error marking all notifications as read:", err);
+    // }
+    try{
+      const response=await axios.patch("http://localhost:5001/api/notifications/mark-all-read",{},{
+        withCredentials:true
+      });
+      setNotifications([])
+      if(response.status===200){
+        toast("All notifications marked as read");
+      }
+    }catch(error)
+    {
+      console.log("Error marking all notifications as read", error);
     }
   };
 
-  const handleNotificationClick = async (n: Notification) => {
-    if (!n.seen) await markAsRead(n.id);
-    setShowNotifications(false);
-    // if you have links, navigate here
-  };
+  // const handleNotificationClick = async (n: Notification) => {
+  //   if (!n.seen) await markAsRead(n.id);
+  //   setShowNotifications(false);
+  //   // if you have links, navigate here
+  // };
+
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -266,7 +280,7 @@ export default function Navbar() {
                   notifications.map((n) => (
                     <button
                       key={n.id}
-                      onClick={() => handleNotificationClick(n)}
+                      // onClick={() => handleNotificationClick(n)}
                       className={`w-full text-left p-3 border-b border-gray-100 hover:bg-orange-50 flex items-start space-x-2 ${
                         !n.seen ? "font-semibold" : "text-gray-600"
                       }`}
@@ -416,8 +430,8 @@ export default function Navbar() {
       <NotificationsModal
         open={showAllModal}
         onClose={() => setShowAllModal(false)}
-        notifications={notifications}
-        onItemClick={(n) => { void handleNotificationClick(n); }}
+       
+        // onItemClick={(n) => { void handleNotificationClick(n); }}
         onMarkAllRead={markAllAsRead}
       />
     </nav>

@@ -1,5 +1,7 @@
 "use client";
 import { X } from "lucide-react";
+import React from "react";
+import axios from "axios";
 export interface Notification {
   id: string;
   message: string;
@@ -7,23 +9,45 @@ export interface Notification {
   seen: boolean;
 }
 import { AlertTriangle } from "lucide-react";
+import { useEffect } from "react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  notifications: Notification[];
-  onItemClick: (n: Notification) => void;
+  // onItemClick: (n: Notification) => void;
   onMarkAllRead: () => void;
 }
 
 export default function NotificationsModal({
   open,
   onClose,
-  notifications,
-  onItemClick,
 }: Props) {
-  if (!open) return null;
+  const [allNotification , setAllNotification] = React.useState<Notification[]>([]);
 
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get("http://localhost:5001/api/notifications/all",
+          {
+            withCredentials: true,
+          }
+        );
+        
+        if (response.status == 200) {
+          const data: Notification[] = await response.data;
+          setAllNotification(data);
+          console.log("Fetched notifications successfully");
+        }
+        
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  if (!open) return null;
+  
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl border border-orange-100 flex flex-col">
@@ -55,16 +79,16 @@ export default function NotificationsModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-          {notifications.length === 0 ? (
+          {allNotification.length === 0 ? (
             <div className="p-8 text-center space-y-3">
               <AlertTriangle className="w-10 h-10 mx-auto text-gray-300" />
               <p className="text-gray-500">No notifications</p>
             </div>
           ) : (
-            notifications.map((n) => (
+           allNotification.map((n) => (
               <button
                 key={n.id}
-                onClick={() => onItemClick(n)}
+                // onClick={() => onItemClick(n)}
                 className={`w-full text-left p-4 hover:bg-orange-50 transition-colors ${
                   !n.seen ? "bg-orange-50/50" : ""
                 }`}

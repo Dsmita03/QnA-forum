@@ -45,37 +45,20 @@ export const sendNotification = async ({
 
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipientId: req.user.id }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ recipientId: req.user.id,seen:false }).sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch notifications" });
   }
 };
-// Mark single notification as read
-export const markNotificationAsRead = async (req, res) => {
+export const getAllNotifications = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, recipientId: userId },
-      { seen: true },
-      { new: true }
-    );
-
-    if (!notification) {
-      return res.status(404).json({ error: "Notification not found" });
-    }
-
-    res.status(200).json({ 
-      message: "Notification marked as read", 
-      notification 
-    });
+    const notifications = await Notification.find({ recipientId: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json(notifications);
   } catch (err) {
-    console.error("Error marking notification as read:", err);
-    res.status(500).json({ error: "Failed to mark notification as read" });
+    res.status(500).json({ error: "Failed to fetch notifications" });
   }
-};
+}; 
 // Mark all notifications as read
 export const markAllNotificationsAsRead = async (req, res) => {
   try {
