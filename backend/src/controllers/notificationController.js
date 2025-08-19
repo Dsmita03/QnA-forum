@@ -1,4 +1,4 @@
-import { Notification } from "../models/notification.js";
+import { Notification } from "../models/Notification.js";
 import { io } from "../index.js";   // the instance you exported
 import { onlineUsers } from "../sockets/index.js"; // may need to export this map
 
