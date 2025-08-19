@@ -20,7 +20,7 @@ const app = express();
 
 // ✅ Enable CORS
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "https://qna-forum.onrender.com",
   credentials: true,
 }));
 
@@ -62,7 +62,7 @@ app.get("/", (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", 
+    origin: "https://qna-forum.onrender.com", 
     methods: ["GET", "POST","PATCH"],
     credentials: true   
   }

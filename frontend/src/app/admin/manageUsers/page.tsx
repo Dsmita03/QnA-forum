@@ -52,24 +52,31 @@ export default function ManageUsersPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [page, setPage] = useState(1);
-    const [loadingActions, setLoadingActions] = useState<{ [key: string]: boolean }>({});
-    
+    const [loadingActions, setLoadingActions] = useState<{
+        [key: string]: boolean;
+    }>({});
+
     // Confirmation Modal States
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [confirmAction, setConfirmAction] = useState<'notify' | 'email' | null>(null);
-    
+    const [confirmAction, setConfirmAction] = useState<
+        "notify" | "email" | null
+    >(null);
+
     const itemsPerPage = 5;
 
     // Filter to show only users with role "user" (exclude admins)
     const filteredUsers = users.filter((user) => {
         if (user.role !== "user") return false;
-        
-        const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === "all" || 
-                            (statusFilter === "active" && !user.isBanned) ||
-                            (statusFilter === "banned" && user.isBanned);
-        
+
+        const matchesSearch = user.name
+            .toLowerCase()
+            .includes(search.toLowerCase());
+        const matchesStatus =
+            statusFilter === "all" ||
+            (statusFilter === "active" && !user.isBanned) ||
+            (statusFilter === "banned" && user.isBanned);
+
         return matchesSearch && matchesStatus;
     });
 
@@ -81,20 +88,23 @@ export default function ManageUsersPage() {
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
     useEffect(() => {
-       const getAllUsers = async () => {
-         try {
-           const response = await axios.get("http://localhost:5001/api/auth/all-users", {
-             withCredentials: true
-           });
-           const data = response.data;
-           setUsers(data);
-         } catch (error) {
-           console.error("Error fetching users:", error);
-           toast.error("Failed to fetch users");
-         }
-       }
+        const getAllUsers = async () => {
+            try {
+                const response = await axios.get(
+                    "https://qna-forum.onrender.com/api/auth/all-users",
+                    {
+                        withCredentials: true,
+                    }
+                );
+                const data = response.data;
+                setUsers(data);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                toast.error("Failed to fetch users");
+            }
+        };
 
-       getAllUsers();
+        getAllUsers();
     }, []);
 
     // Prevent background scroll when modal is open
@@ -105,10 +115,14 @@ export default function ManageUsersPage() {
         };
     }, [showConfirmModal]);
 
-    const setActionLoading = (userId: string, action: string, loading: boolean) => {
-        setLoadingActions(prev => ({
+    const setActionLoading = (
+        userId: string,
+        action: string,
+        loading: boolean
+    ) => {
+        setLoadingActions((prev) => ({
             ...prev,
-            [`${userId}-${action}`]: loading
+            [`${userId}-${action}`]: loading,
         }));
     };
 
@@ -119,11 +133,11 @@ export default function ManageUsersPage() {
                 user._id === id ? { ...user, isBanned: !user.isBanned } : user
             )
         );
-        
+
         // Call API to update ban status
         try {
             const response = await axios.put(
-                `http://localhost:5001/api/auth/ban-user/${id}`,
+                `https://qna-forum.onrender.com/api/auth/ban-user/${id}`,
                 {},
                 { withCredentials: true }
             );
@@ -133,14 +147,15 @@ export default function ManageUsersPage() {
             // Revert optimistic update on error
             setUsers((prev) =>
                 prev.map((user) =>
-                    user._id === id ? { ...user, isBanned: !user.isBanned } : user
+                    user._id === id
+                        ? { ...user, isBanned: !user.isBanned }
+                        : user
                 )
             );
         }
     };
 
-
-    const openConfirmModal = (user: User, action: 'notify' | 'email') => {
+    const openConfirmModal = (user: User, action: "notify" | "email") => {
         setSelectedUser(user);
         setConfirmAction(action);
         setShowConfirmModal(true);
@@ -155,79 +170,86 @@ export default function ManageUsersPage() {
     const handleConfirmedAction = async () => {
         if (!selectedUser || !confirmAction) return;
 
-        if (confirmAction === 'notify') {
+        if (confirmAction === "notify") {
             await sendNotification(selectedUser._id);
-        } else if (confirmAction === 'email') {
+        } else if (confirmAction === "email") {
             await sendEmail(selectedUser._id);
         }
-        
+
         closeConfirmModal();
     };
 
     const sendNotification = async (id: string) => {
-        setActionLoading(id, 'notify', true);
-        
+        setActionLoading(id, "notify", true);
+
         try {
             // Simulate API call - replace with your actual notification API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const user = users.find(u => u._id === id);
-            toast.success(`📢 Notification sent successfully to ${user?.name}!`);
-            
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            const user = users.find((u) => u._id === id);
+            toast.success(
+                `📢 Notification sent successfully to ${user?.name}!`
+            );
         } catch (error: any) {
             console.error("Error sending notification:", error);
             toast.error("Failed to send notification");
         } finally {
-            setActionLoading(id, 'notify', false);
+            setActionLoading(id, "notify", false);
         }
     };
 
     const sendEmail = async (id: string) => {
-        setActionLoading(id, 'email', true);
-        
+        setActionLoading(id, "email", true);
+
         try {
-            const user = users.find(u => u._id === id);
+            const user = users.find((u) => u._id === id);
             if (!user) {
                 throw new Error("User not found");
             }
 
             const response = await axios.post(
-                `http://localhost:5001/api/email/send-admin-email`,
+                `https://qna-forum.onrender.com/api/email/send-admin-email`,
                 {
                     userId: id,
                     userEmail: user.email,
                     userName: user.name,
                     subject: "Important Notice from Admin",
-                    message: `Dear ${user.name},\n\nWe hope this message finds you well. This is an important notice from the administration team.\n\nIf you have any questions or concerns, please don't hesitate to contact our support team.\n\nBest regards,\nAdmin Team`
+                    message: `Dear ${user.name},\n\nWe hope this message finds you well. This is an important notice from the administration team.\n\nIf you have any questions or concerns, please don't hesitate to contact our support team.\n\nBest regards,\nAdmin Team`,
                 },
                 { withCredentials: true }
             );
-            
+
             if (response.data.success) {
                 toast.success(`📧 Email sent successfully to ${user.email}!`);
             } else {
-                throw new Error(response.data.message || "Failed to send email");
+                throw new Error(
+                    response.data.message || "Failed to send email"
+                );
             }
         } catch (error: any) {
             console.error("Error sending email:", error);
-            const errorMessage = error.response?.data?.message || error.message || "Failed to send email";
+            const errorMessage =
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to send email";
             toast.error(`Error: ${errorMessage}`);
         } finally {
-            setActionLoading(id, 'email', false);
+            setActionLoading(id, "email", false);
         }
     };
 
     const getConfirmationContent = () => {
         if (!selectedUser || !confirmAction) return null;
 
-        if (confirmAction === 'notify') {
+        if (confirmAction === "notify") {
             return {
                 icon: <Bell className="w-6 h-6 text-blue-500" />,
                 title: "Send Notification",
                 message: `Are you sure you want to send a notification to ${selectedUser.name}?`,
-                description: "This will send an in-app notification to the user.",
+                description:
+                    "This will send an in-app notification to the user.",
                 confirmText: "Send Notification",
-                confirmClass: "bg-blue-500 hover:bg-blue-600"
+                confirmClass: "bg-blue-500 hover:bg-blue-600",
             };
         } else {
             return {
@@ -236,7 +258,7 @@ export default function ManageUsersPage() {
                 message: `Are you sure you want to send an email to ${selectedUser.name}?`,
                 description: `This will send an administrative email to ${selectedUser.email}.`,
                 confirmText: "Send Email",
-                confirmClass: "bg-purple-500 hover:bg-purple-600"
+                confirmClass: "bg-purple-500 hover:bg-purple-600",
             };
         }
     };
@@ -252,9 +274,14 @@ export default function ManageUsersPage() {
                         <div className="p-2 bg-orange-500 rounded-lg shadow-lg">
                             <UserSearch className="w-6 h-6 text-white" />
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            User Management
+                        </h1>
                     </div>
-                    <p className="text-gray-600">Manage regular users, monitor activity, and control access</p>
+                    <p className="text-gray-600">
+                        Manage regular users, monitor activity, and control
+                        access
+                    </p>
                 </div>
 
                 <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
@@ -268,7 +295,9 @@ export default function ManageUsersPage() {
                                         <Input
                                             placeholder="Search by name..."
                                             value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
+                                            onChange={(e) =>
+                                                setSearch(e.target.value)
+                                            }
                                             className="pl-10 border-gray-200 focus:border-orange-400 focus:ring-orange-400 bg-white shadow-sm"
                                         />
                                     </div>
@@ -276,19 +305,29 @@ export default function ManageUsersPage() {
                                         <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                         <select
                                             value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            onChange={(e) =>
+                                                setStatusFilter(e.target.value)
+                                            }
                                             className="pl-10 pr-8 py-2 border border-gray-200 rounded-md focus:border-orange-400 focus:ring-orange-400 bg-white shadow-sm appearance-none cursor-pointer min-w-[140px]"
                                         >
-                                            <option value="all">All Status</option>
-                                            <option value="active">Active Users</option>
-                                            <option value="banned">Banned Users</option>
+                                            <option value="all">
+                                                All Status
+                                            </option>
+                                            <option value="active">
+                                                Active Users
+                                            </option>
+                                            <option value="banned">
+                                                Banned Users
+                                            </option>
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
                                     <Users className="w-4 h-4" />
-                                    <span className="font-medium">{filteredUsers.length}</span>
+                                    <span className="font-medium">
+                                        {filteredUsers.length}
+                                    </span>
                                     <span>users found</span>
                                 </div>
                             </div>
@@ -346,11 +385,20 @@ export default function ManageUsersPage() {
                                 <tbody>
                                     {paginatedUsers.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-12 text-center">
+                                            <td
+                                                colSpan={7}
+                                                className="px-6 py-12 text-center"
+                                            >
                                                 <div className="flex flex-col items-center gap-3">
                                                     <Users className="w-12 h-12 text-gray-300" />
-                                                    <p className="text-gray-500 font-medium">No users found</p>
-                                                    <p className="text-gray-400 text-sm">Try adjusting your search or filter criteria</p>
+                                                    <p className="text-gray-500 font-medium">
+                                                        No users found
+                                                    </p>
+                                                    <p className="text-gray-400 text-sm">
+                                                        Try adjusting your
+                                                        search or filter
+                                                        criteria
+                                                    </p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -359,21 +407,29 @@ export default function ManageUsersPage() {
                                             <tr
                                                 key={user._id}
                                                 className={`border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all duration-200 ${
-                                                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                                                    index % 2 === 0
+                                                        ? "bg-white"
+                                                        : "bg-gray-50/50"
                                                 }`}
                                             >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                                                            {user.name.charAt(0).toUpperCase()}
+                                                            {user.name
+                                                                .charAt(0)
+                                                                .toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <div className="font-semibold text-gray-900">{user.name}</div>
+                                                            <div className="font-semibold text-gray-900">
+                                                                {user.name}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-gray-700">{user.email}</div>
+                                                    <div className="text-gray-700">
+                                                        {user.email}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -383,14 +439,22 @@ export default function ManageUsersPage() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                                            <span className="text-green-700 font-semibold text-sm">{user.questionCount}</span>
+                                                            <span className="text-green-700 font-semibold text-sm">
+                                                                {
+                                                                    user.questionCount
+                                                                }
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                                            <span className="text-purple-700 font-semibold text-sm">{user.answerCount}</span>
+                                                            <span className="text-purple-700 font-semibold text-sm">
+                                                                {
+                                                                    user.answerCount
+                                                                }
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -416,33 +480,56 @@ export default function ManageUsersPage() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex gap-2">
                                                         <Button
-                                                            onClick={() => toggleBan(user._id)}
+                                                            onClick={() =>
+                                                                toggleBan(
+                                                                    user._id
+                                                                )
+                                                            }
                                                             size="sm"
                                                             variant="outline"
-                                                            disabled={loadingActions[`${user._id}-ban`]}
+                                                            disabled={
+                                                                loadingActions[
+                                                                    `${user._id}-ban`
+                                                                ]
+                                                            }
                                                             className={`${
-                                                                user.isBanned 
-                                                                    ? 'text-green-600 border-green-300 hover:bg-green-50 hover:border-green-400' 
-                                                                    : 'text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400'
+                                                                user.isBanned
+                                                                    ? "text-green-600 border-green-300 hover:bg-green-50 hover:border-green-400"
+                                                                    : "text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
                                                             } transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50`}
                                                         >
-                                                            {loadingActions[`${user._id}-ban`] ? (
+                                                            {loadingActions[
+                                                                `${user._id}-ban`
+                                                            ] ? (
                                                                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                                                             ) : user.isBanned ? (
                                                                 <CheckCircle className="w-4 h-4 mr-1" />
                                                             ) : (
                                                                 <Ban className="w-4 h-4 mr-1" />
                                                             )}
-                                                            {user.isBanned ? "Allow" : "Ban"}
+                                                            {user.isBanned
+                                                                ? "Allow"
+                                                                : "Ban"}
                                                         </Button>
                                                         <Button
-                                                            onClick={() => openConfirmModal(user, 'notify')}
+                                                            onClick={() =>
+                                                                openConfirmModal(
+                                                                    user,
+                                                                    "notify"
+                                                                )
+                                                            }
                                                             size="sm"
                                                             variant="outline"
-                                                            disabled={loadingActions[`${user._id}-notify`]}
+                                                            disabled={
+                                                                loadingActions[
+                                                                    `${user._id}-notify`
+                                                                ]
+                                                            }
                                                             className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50"
                                                         >
-                                                            {loadingActions[`${user._id}-notify`] ? (
+                                                            {loadingActions[
+                                                                `${user._id}-notify`
+                                                            ] ? (
                                                                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                                                             ) : (
                                                                 <Bell className="w-4 h-4 mr-1" />
@@ -450,13 +537,24 @@ export default function ManageUsersPage() {
                                                             Notify
                                                         </Button>
                                                         <Button
-                                                            onClick={() => openConfirmModal(user, 'email')}
+                                                            onClick={() =>
+                                                                openConfirmModal(
+                                                                    user,
+                                                                    "email"
+                                                                )
+                                                            }
                                                             size="sm"
                                                             variant="outline"
-                                                            disabled={loadingActions[`${user._id}-email`]}
+                                                            disabled={
+                                                                loadingActions[
+                                                                    `${user._id}-email`
+                                                                ]
+                                                            }
                                                             className="text-purple-600 border-purple-300 hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50"
                                                         >
-                                                            {loadingActions[`${user._id}-email`] ? (
+                                                            {loadingActions[
+                                                                `${user._id}-email`
+                                                            ] ? (
                                                                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                                                             ) : (
                                                                 <Mail className="w-4 h-4 mr-1" />
@@ -477,8 +575,14 @@ export default function ManageUsersPage() {
                             <div className="p-6 bg-gradient-to-r from-white to-orange-50/50 border-t">
                                 <div className="flex justify-between items-center">
                                     <div className="text-sm text-gray-600">
-                                        Showing page <span className="font-semibold text-gray-900">{page}</span> of{' '}
-                                        <span className="font-semibold text-gray-900">{totalPages}</span>
+                                        Showing page{" "}
+                                        <span className="font-semibold text-gray-900">
+                                            {page}
+                                        </span>{" "}
+                                        of{" "}
+                                        <span className="font-semibold text-gray-900">
+                                            {totalPages}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Button
@@ -530,7 +634,7 @@ export default function ManageUsersPage() {
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
                                 <div className="flex items-start gap-2">
                                     <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -540,7 +644,7 @@ export default function ManageUsersPage() {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
                             <Button
                                 variant="outline"

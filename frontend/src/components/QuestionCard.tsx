@@ -45,14 +45,14 @@ export default function QuestionCard({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { toast } = useToast();
-    
+
     // Get user data from store
     const { user, isAuthenticated } = useAppStore();
     const isAdmin = user.role === "admin";
     const isLoggedIn = isAuthenticated();
 
-    useEffect(() => { 
-        setIsClient(true); 
+    useEffect(() => {
+        setIsClient(true);
     }, []);
 
     // Prevent background scroll when modal is open
@@ -66,7 +66,7 @@ export default function QuestionCard({
     const callIncreaseLike = async (id: string) => {
         try {
             const res = await axios.put(
-                "http://localhost:5001/api/questions/increase-like/",
+                "https://qna-forum.onrender.com/api/questions/increase-like/",
                 { id },
                 { withCredentials: true }
             );
@@ -79,7 +79,7 @@ export default function QuestionCard({
     const callDecreaseLike = async (id: string) => {
         try {
             const res = await axios.put(
-                "http://localhost:5001/api/questions/decrease-like/",
+                "https://qna-forum.onrender.com/api/questions/decrease-like/",
                 { id },
                 { withCredentials: true }
             );
@@ -92,8 +92,8 @@ export default function QuestionCard({
     const handleLike = async (id: string) => {
         // Prevent action if admin or not logged in
         if (isAdmin || !isLoggedIn) return;
-        
-        console.log(likeActive)
+
+        console.log(likeActive);
         if (likeActive) {
             // User is unliking
             await callDecreaseLike(id);
@@ -117,8 +117,8 @@ export default function QuestionCard({
     const handleDislike = async (id: string) => {
         // Prevent action if admin or not logged in
         if (isAdmin || !isLoggedIn) return;
-        
-        console.log(dislikeActive, likeActive)
+
+        console.log(dislikeActive, likeActive);
         if (dislikeActive) {
             // User is removing dislike
             await callIncreaseLike(id);
@@ -155,36 +155,43 @@ export default function QuestionCard({
             return false;
         }
         if (reportReason.trim().length < 10) {
-            setValidationError("Please provide a more detailed reason (at least 10 characters).");
+            setValidationError(
+                "Please provide a more detailed reason (at least 10 characters)."
+            );
             return false;
         }
         setValidationError("");
         return true;
     };
 
-   const handleSubmitReport = async () => {
-    if (!validateReport()) return;
-    
-    setIsSubmitting(true);
-    try {
-        const response = await axios.post('http://localhost:5001/api/reports/submit', {
-            questionId: id,
-            reason: selectedCategory,
-            message: reportReason
-        }, { withCredentials: true });
-        
-        toast(
-            response.data.message || "Report Submitted. Thank you for helping maintain our community standards."
-        );
-        
-        handleCloseModal();
-    } catch (error) {
-        console.error("Report submission error:", error);
-        toast("Failed to submit report. Please try again.");
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+    const handleSubmitReport = async () => {
+        if (!validateReport()) return;
+
+        setIsSubmitting(true);
+        try {
+            const response = await axios.post(
+                "https://qna-forum.onrender.com/api/reports/submit",
+                {
+                    questionId: id,
+                    reason: selectedCategory,
+                    message: reportReason,
+                },
+                { withCredentials: true }
+            );
+
+            toast(
+                response.data.message ||
+                    "Report Submitted. Thank you for helping maintain our community standards."
+            );
+
+            handleCloseModal();
+        } catch (error) {
+            console.error("Report submission error:", error);
+            toast("Failed to submit report. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const handleCloseModal = () => {
         setShowReportModal(false);
@@ -195,12 +202,12 @@ export default function QuestionCard({
     };
 
     const formatDate = (dateString?: string) => {
-        if (!dateString || !isClient) return '';
+        if (!dateString || !isClient) return "";
         const date = new Date(dateString);
         const now = new Date();
         const diffTime = Math.abs(now.getTime() - date.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) return '1 day ago';
+        if (diffDays === 1) return "1 day ago";
         if (diffDays < 7) return `${diffDays} days ago`;
         if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
         return date.toLocaleDateString();
@@ -212,7 +219,7 @@ export default function QuestionCard({
         { value: "harassment", label: "Harassment or Bullying" },
         { value: "copyright", label: "Copyright Violation" },
         { value: "misinformation", label: "Misinformation" },
-        { value: "other", label: "Other" }
+        { value: "other", label: "Other" },
     ];
 
     return (
@@ -239,25 +246,29 @@ export default function QuestionCard({
                                 onClick={() => handleLike(id)}
                                 className={`p-2 rounded-full transition-all ${
                                     likeActive
-                                        ? 'bg-green-100 text-green-700 border-green-200 border'
-                                        : 'text-gray-300 hover:text-green-600 hover:bg-green-50'
+                                        ? "bg-green-100 text-green-700 border-green-200 border"
+                                        : "text-gray-300 hover:text-green-600 hover:bg-green-50"
                                 }`}
                             >
                                 <ThumbsUp className="w-5 h-5" />
                             </button>
-                            <span className="text-xs font-semibold text-gray-700">{likeCount}</span>
+                            <span className="text-xs font-semibold text-gray-700">
+                                {likeCount}
+                            </span>
                             <button
                                 aria-label="Dislike"
                                 onClick={() => handleDislike(id)}
                                 className={`p-2 rounded-full transition-all ${
                                     dislikeActive
-                                        ? 'bg-red-100 text-red-600 border-red-200 border'
-                                        : 'text-gray-300 hover:text-red-600 hover:bg-red-50'
+                                        ? "bg-red-100 text-red-600 border-red-200 border"
+                                        : "text-gray-300 hover:text-red-600 hover:bg-red-50"
                                 }`}
                             >
                                 <ThumbsDown className="w-5 h-5" />
                             </button>
-                            <span className="text-xs font-semibold text-gray-700">{dislikeCount}</span>
+                            <span className="text-xs font-semibold text-gray-700">
+                                {dislikeCount}
+                            </span>
                         </div>
                     )}
 
@@ -267,18 +278,27 @@ export default function QuestionCard({
                             <div className="p-2 rounded-full bg-gray-100 text-gray-500">
                                 <ThumbsUp className="w-5 h-5" />
                             </div>
-                            <span className="text-xs font-semibold text-gray-700">{likeCount}</span>
+                            <span className="text-xs font-semibold text-gray-700">
+                                {likeCount}
+                            </span>
                             <div className="p-2 rounded-full bg-gray-100 text-gray-500">
                                 <ThumbsDown className="w-5 h-5" />
                             </div>
-                            <span className="text-xs font-semibold text-gray-700">{dislikeCount}</span>
+                            <span className="text-xs font-semibold text-gray-700">
+                                {dislikeCount}
+                            </span>
                         </div>
                     )}
 
                     {/* Question Content */}
-                    <Link href={`/questions/${id}`} className="flex-1 group-hover:scale-[1.01] transition-transform">
+                    <Link
+                        href={`/questions/${id}`}
+                        className="flex-1 group-hover:scale-[1.01] transition-transform"
+                    >
                         <div className="flex flex-col gap-2">
-                            <h2 className="text-lg md:text-xl font-semibold text-gray-900 line-clamp-2">{title}</h2>
+                            <h2 className="text-lg md:text-xl font-semibold text-gray-900 line-clamp-2">
+                                {title}
+                            </h2>
                             <div className="flex flex-wrap gap-2 mt-1">
                                 {tags.map((tag) => (
                                     <Badge
@@ -292,8 +312,15 @@ export default function QuestionCard({
                             </div>
                             <div className="flex justify-between items-end text-xs text-gray-500 mt-3 pt-2 border-t border-orange-50">
                                 <div>
-                                    Asked by <span className="font-medium text-orange-700">{username}</span>
-                                    {createdAt && <span className="ml-1">• {formatDate(createdAt)}</span>}
+                                    Asked by{" "}
+                                    <span className="font-medium text-orange-700">
+                                        {username}
+                                    </span>
+                                    {createdAt && (
+                                        <span className="ml-1">
+                                            • {formatDate(createdAt)}
+                                        </span>
+                                    )}
                                     {/* Show admin badge for admins */}
                                     {isAdmin && (
                                         <span className="ml-2 bg-blue-100 text-blue-700 border border-blue-300 rounded-full px-2 py-0.5 text-xs font-medium">
@@ -302,7 +329,8 @@ export default function QuestionCard({
                                     )}
                                 </div>
                                 <span className="ml-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-3 py-0.5 font-semibold text-xs shadow-sm">
-                                    {answersCount} {answersCount === 1 ? 'Answer' : 'Answers'}
+                                    {answersCount}{" "}
+                                    {answersCount === 1 ? "Answer" : "Answers"}
                                 </span>
                             </div>
                         </div>
@@ -321,8 +349,12 @@ export default function QuestionCard({
                                     <Flag className="w-5 h-5 text-red-600" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-800">Report Question</h3>
-                                    <p className="text-sm text-gray-600">Help us maintain community standards</p>
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                        Report Question
+                                    </h3>
+                                    <p className="text-sm text-gray-600">
+                                        Help us maintain community standards
+                                    </p>
                                 </div>
                             </div>
                             <button
@@ -337,9 +369,15 @@ export default function QuestionCard({
                         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                             {/* Question Preview */}
                             <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400 mb-6">
-                                <p className="text-sm font-medium text-orange-800 mb-1">Reporting:</p>
-                                <p className="text-sm text-orange-700 line-clamp-2">{title}</p>
-                                <p className="text-xs text-orange-600 mt-1">by {username}</p>
+                                <p className="text-sm font-medium text-orange-800 mb-1">
+                                    Reporting:
+                                </p>
+                                <p className="text-sm text-orange-700 line-clamp-2">
+                                    {title}
+                                </p>
+                                <p className="text-xs text-orange-600 mt-1">
+                                    by {username}
+                                </p>
                             </div>
 
                             {/* Category Selection */}
@@ -349,16 +387,28 @@ export default function QuestionCard({
                                 </label>
                                 <div className="space-y-2">
                                     {reportCategories.map((category) => (
-                                        <label key={category.value} className="flex items-center">
+                                        <label
+                                            key={category.value}
+                                            className="flex items-center"
+                                        >
                                             <input
                                                 type="radio"
                                                 name="reportCategory"
                                                 value={category.value}
-                                                checked={selectedCategory === category.value}
-                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                checked={
+                                                    selectedCategory ===
+                                                    category.value
+                                                }
+                                                onChange={(e) =>
+                                                    setSelectedCategory(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 className="mr-3 text-orange-600 focus:ring-orange-500"
                                             />
-                                            <span className="text-sm text-gray-700">{category.label}</span>
+                                            <span className="text-sm text-gray-700">
+                                                {category.label}
+                                            </span>
                                         </label>
                                     ))}
                                 </div>
@@ -371,7 +421,9 @@ export default function QuestionCard({
                                 </label>
                                 <textarea
                                     value={reportReason}
-                                    onChange={(e) => setReportReason(e.target.value)}
+                                    onChange={(e) =>
+                                        setReportReason(e.target.value)
+                                    }
                                     placeholder="Please provide specific details about why you're reporting this question..."
                                     rows={4}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none text-sm"
@@ -384,7 +436,9 @@ export default function QuestionCard({
                             {/* Validation Error */}
                             {validationError && (
                                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <p className="text-sm text-red-700">{validationError}</p>
+                                    <p className="text-sm text-red-700">
+                                        {validationError}
+                                    </p>
                                 </div>
                             )}
                         </div>

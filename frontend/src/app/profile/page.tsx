@@ -1,4 +1,3 @@
- 
 "use client";
 
 import Navbar from "@/components/navbar";
@@ -67,7 +66,7 @@ export default function Profile() {
         const fetchProfile = async () => {
             try {
                 const response = await axios.get(
-                    "http://localhost:5001/api/auth/profile",
+                    "https://qna-forum.onrender.com/api/auth/profile",
                     { withCredentials: true }
                 );
                 const data = response.data;
@@ -77,93 +76,90 @@ export default function Profile() {
                     userId: data.id ?? prev.userId,
                 }));
                 setUser({
-                name: data.name ?? "",
-                email: data.email,
-                userId: data.id,
-                role: data.role,
-                isLoggedIn: true,
-                profileImage: data.avatar || "/profile.png",
-            });
+                    name: data.name ?? "",
+                    email: data.email,
+                    userId: data.id,
+                    role: data.role,
+                    isLoggedIn: true,
+                    profileImage: data.avatar || "/profile.png",
+                });
             } catch (error) {
                 console.error("Error fetching profile:", error);
             }
         };
-fetchProfile();
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
+        fetchProfile();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         setEditedProfile(profile); // sync editedProfile with new profile
     }, [profile]);
     const handleSave = async () => {
-    setLoading(true);
-    try {
-        await axios.put(
-            "http://localhost:5001/api/auth/profile",
-            editedProfile,
-            { withCredentials: true }
-        );
+        setLoading(true);
+        try {
+            await axios.put(
+                "https://qna-forum.onrender.com/api/auth/profile",
+                editedProfile,
+                { withCredentials: true }
+            );
 
-        setProfile(editedProfile);
-        setIsEditing(false);
-    } catch (error) {
-        console.error("Failed to save profile:", error);
-    } finally {
-        setLoading(false);
-    }
-};
-
+            setProfile(editedProfile);
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Failed to save profile:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleCancel = () => {
         setEditedProfile(profile);
         setIsEditing(false);
     };
 
-   const handleImageUpload = async (file: File, type: "avatar" | "cover") => {
-    if (!file) return;
+    const handleImageUpload = async (file: File, type: "avatar" | "cover") => {
+        if (!file) return;
 
-    const formData = new FormData();
-    formData.append("image", file);
+        const formData = new FormData();
+        formData.append("image", file);
 
-    try {
-        const response = await axios.post(
-           "http://localhost:5001/api/upload/image",
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-                withCredentials: true,
+        try {
+            const response = await axios.post(
+                "https://qna-forum.onrender.com/api/upload/image",
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            const imageUrl = response.data.imageUrl;
+
+            const updatedProfile = {
+                ...profile,
+                [type === "avatar" ? "avatar" : "coverImage"]: imageUrl,
+            };
+
+            setProfile(updatedProfile);
+            setEditedProfile(updatedProfile);
+            if (type === "avatar") {
+                setUser({
+                    ...user,
+                    profileImage: imageUrl,
+                });
             }
-        );
-
-        const imageUrl = response.data.imageUrl;
-
-        const updatedProfile = {
-            ...profile,
-            [type === "avatar" ? "avatar" : "coverImage"]: imageUrl,
-        };
-
-        setProfile(updatedProfile);
-        setEditedProfile(updatedProfile);
-        if (type === "avatar") {
-         setUser({
-             ...user,
-          profileImage: imageUrl,
-      });
-    }
-        // Optional: persist to backend DB
-        await axios.put(
-            "http://localhost:5001/api/auth/profile",
-            { [type === "avatar" ? "avatar" : "coverImage"]: imageUrl },
-            { withCredentials: true }
-        );
-    } catch (error) {
-        console.error("Upload failed:", error);
-    }
-};
-
+            // Optional: persist to backend DB
+            await axios.put(
+                "https://qna-forum.onrender.com/api/auth/profile",
+                { [type === "avatar" ? "avatar" : "coverImage"]: imageUrl },
+                { withCredentials: true }
+            );
+        } catch (error) {
+            console.error("Upload failed:", error);
+        }
+    };
 
     const contactInfo = [
         { label: "User Id", value: profile.userId },

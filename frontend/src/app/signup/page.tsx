@@ -25,7 +25,7 @@ export default function Signup() {
 
         try {
             const res = await axios.post(
-                "http://localhost:5001/api/auth/signup",
+                "https://qna-forum.onrender.com/api/auth/signup",
                 {
                     name,
                     email,
@@ -39,16 +39,16 @@ export default function Signup() {
 
             if (res.status === 201) {
                 const data = res.data.user;
-                
+
                 // Set user in store with the updated interface
                 setUser({
                     userId: data.id,
-                    name: data.name, 
+                    name: data.name,
                     email: data.email,
                     role: data.role,
                     isLoggedIn: true,
                 });
-                
+
                 // Role-based redirect
                 if (data.role === "admin") {
                     router.push("/admin");
@@ -76,9 +76,12 @@ export default function Signup() {
                         height={300}
                         className="mb-6"
                     />
-                    <h3 className="text-2xl font-bold mb-2">Welcome to StackIt</h3>
+                    <h3 className="text-2xl font-bold mb-2">
+                        Welcome to StackIt
+                    </h3>
                     <p className="text-orange-100 text-center text-sm">
-                        Join our community and start building amazing things together
+                        Join our community and start building amazing things
+                        together
                     </p>
                 </div>
 
@@ -142,7 +145,9 @@ export default function Signup() {
                             </label>
                             <select
                                 value={role}
-                                onChange={(e) => setRole(e.target.value as "user" | "admin")}
+                                onChange={(e) =>
+                                    setRole(e.target.value as "user" | "admin")
+                                }
                                 className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 text-gray-700 bg-white"
                             >
                                 <option value="user">User</option>

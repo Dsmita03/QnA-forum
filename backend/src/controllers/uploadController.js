@@ -22,7 +22,7 @@ const upload = multer({ storage });
 
 export const uploadImage = (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const imageUrl = `http://localhost:5001/uploads/${req.file.filename}`;
+  const imageUrl = `https://qna-forum.onrender.com/uploads/${req.file.filename}`;
   res.json({ imageUrl });
 };
 

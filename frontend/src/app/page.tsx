@@ -53,7 +53,7 @@ export default function Home() {
         const fetchAnswers = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:5001/api/answers/count"
+                    "https://qna-forum.onrender.com/api/answers/count"
                 );
                 console.log("🔹 Answer count:", res.data);
                 setTotalAnswers(res.data); // assuming { count: number }
@@ -64,12 +64,12 @@ export default function Home() {
 
         fetchAnswers();
     }, []);
-    
+
     useEffect(() => {
         const fetchUsers = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:5001/api/auth/count"
+                    "https://qna-forum.onrender.com/api/auth/count"
                 );
                 console.log("User count:", res.data);
                 setTotalUsers(res.data.count); // assuming { count: number }
@@ -79,13 +79,13 @@ export default function Home() {
         };
 
         fetchUsers();
-    },[])
+    }, []);
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
                 setLoading(true);
                 const res = await axios.get(
-                    "http://localhost:5001/api/questions",
+                    "https://qna-forum.onrender.com/api/questions",
                     { withCredentials: true }
                 );
                 console.log("🔹 Questions:", res.data);
@@ -126,7 +126,7 @@ export default function Home() {
             // if you want to run this regardless of count being 0 or more
             fetchQuestions();
         }
-    }, [totalAnswers,totalUsers]); // dependency
+    }, [totalAnswers, totalUsers]); // dependency
 
     // Filter questions based on search term
     const filteredQuestions = questions.filter((question) => {

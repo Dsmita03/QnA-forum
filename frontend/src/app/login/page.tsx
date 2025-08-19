@@ -23,7 +23,7 @@ export default function Login() {
 
         try {
             const res = await axios.post(
-                "http://localhost:5001/api/auth/login",
+                "https://qna-forum.onrender.com/api/auth/login",
                 {
                     email,
                     password,
@@ -36,16 +36,16 @@ export default function Login() {
             if (res.status === 200) {
                 console.log(res.data);
                 const data = res.data.user;
-                
+
                 // Set user in store with complete user data
                 setUser({
                     name: data.name,
                     userId: data.id,
-                    email: data.email,  
+                    email: data.email,
                     role: data.role,
                     isLoggedIn: true,
                 });
-                
+
                 // Role-based redirect (same as signup)
                 if (data.role === "admin") {
                     router.push("/admin");
