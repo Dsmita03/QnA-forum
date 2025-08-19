@@ -20,7 +20,7 @@ const app = express();
 
 // ✅ Enable CORS
 app.use(cors({
-  origin: "https://qna-forum.onrender.com",
+  origin: "https://qn-a-forum.vercel.app",
   credentials: true,
 }));
 
@@ -62,7 +62,7 @@ app.get("/", (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://qna-forum.onrender.com", 
+    origin: "https://qn-a-forum.vercel.app", 
     methods: ["GET", "POST","PATCH"],
     credentials: true   
   }
