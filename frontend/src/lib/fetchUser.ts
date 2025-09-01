@@ -5,7 +5,7 @@ import { useAppStore } from "@/store";
 
 export const fetchAndStoreUser = async () => {
   try {
-    const res = await axios.get("/api/auth/profile"); // Adjust path if needed
+    const res = await axios.get("/api/auth/profile");  
     const user = res.data;
 
     useAppStore.getState().setUser({

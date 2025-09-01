@@ -92,7 +92,7 @@ const AskQuestionPage = () => {
     }, [user]);
 
     useEffect(() => {
-        // Update active step based on filled fields
+         
         if (title.length >= 10) {
             setActiveStep(1);
             if (description.trim() && description !== "<p></p>") {
@@ -159,7 +159,7 @@ const AskQuestionPage = () => {
             }
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error("❌ Error submitting question:", error);
+            console.error("Error submitting question:", error);
             setErrors([
                 error?.response?.data?.message ||
                     "Failed to submit question. Please try again.",

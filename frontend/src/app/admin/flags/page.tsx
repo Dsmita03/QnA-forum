@@ -51,7 +51,7 @@ export default function AdminReviewFlagsPage() {
         dismissed: 0,
     });
 
-    // ✅ Loading and error states for actions
+    // Loading and error states for actions
     const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
         {}
     );
@@ -97,7 +97,7 @@ export default function AdminReviewFlagsPage() {
         }
     };
 
-    // ✅ Complete handleAction with proper error handling and stats update
+    //Complete handleAction with proper error handling and stats update
     const handleAction = async (
         flagId: string,
         action: "approve" | "dismiss"
@@ -115,7 +115,7 @@ export default function AdminReviewFlagsPage() {
                 }
             );
 
-            // ✅ Use functional update to avoid stale closure
+            //Use functional update to avoid stale closure
             setFlags((prevFlags) =>
                 prevFlags.map((flag) =>
                     flag.id === flagId
@@ -130,7 +130,7 @@ export default function AdminReviewFlagsPage() {
                 )
             );
 
-            // ✅ Update stats from backend response or manually
+            //Update stats from backend response or manually
             if (response.data.updatedStats) {
                 setStats(response.data.updatedStats);
             } else {
@@ -181,7 +181,7 @@ export default function AdminReviewFlagsPage() {
         }
     };
 
-    // ✅ Action handler with confirmation for destructive actions
+    //Action handler with confirmation for destructive actions
     const handleActionClick = (
         flagId: string,
         action: "approve" | "dismiss",
@@ -787,7 +787,7 @@ export default function AdminReviewFlagsPage() {
                     </Card>
                 </motion.div>
 
-                {/* ✅ Confirmation Modal */}
+                {/*Confirmation Modal */}
                 {confirmingAction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <motion.div
@@ -847,7 +847,7 @@ export default function AdminReviewFlagsPage() {
                     </div>
                 )}
 
-                {/* ✅ Error Display */}
+                {/*Error Display */}
                 {error && (
                     <div className="fixed bottom-4 right-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl shadow-lg z-50 max-w-sm">
                         <div className="flex items-start gap-2">

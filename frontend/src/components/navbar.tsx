@@ -19,9 +19,6 @@ interface Notification {
 }
 
 export default function Navbar() {
-    /* ------------------------------------------------------------------ */
-    /* STATE & REFS                                                       */
-    /* ------------------------------------------------------------------ */
     const pathname = usePathname();
     const router = useRouter();
     const user = useAppStore((s) => s.user);
@@ -37,9 +34,7 @@ export default function Navbar() {
     const notificationRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
 
-    /* ------------------------------------------------------------------ */
-    /* LOAD USER PROFILE (once)                                           */
-    /* ------------------------------------------------------------------ */
+     
     useEffect(() => {
         if (user.isLoggedIn) return;
 
@@ -66,9 +61,7 @@ export default function Navbar() {
         fetchProfile();
     }, [setUser, user.isLoggedIn]);
 
-    /* ------------------------------------------------------------------ */
-    /* SOCKET.IO – live notifications                                     */
-    /* ------------------------------------------------------------------ */
+    
     useEffect(() => {
         if (!user.isLoggedIn || !user.userId) return;
 
@@ -87,9 +80,7 @@ export default function Navbar() {
         };
     }, [user.userId, user.isLoggedIn]);
 
-    /* ------------------------------------------------------------------ */
-    /* POLL NOTIFICATION LIST EVERY 60 s                                   */
-    /* ------------------------------------------------------------------ */
+    
     useEffect(() => {
         if (!user.isLoggedIn) return;
 
@@ -115,9 +106,7 @@ export default function Navbar() {
         return () => clearInterval(id);
     }, [user.isLoggedIn]);
 
-    /* ------------------------------------------------------------------ */
-    /* CLICK-OUTSIDE TO CLOSE MENUS                                       */
-    /* ------------------------------------------------------------------ */
+    
     useEffect(() => {
         const closeOnOutside = (e: MouseEvent) => {
             if (
@@ -137,9 +126,7 @@ export default function Navbar() {
         return () => document.removeEventListener("mousedown", closeOnOutside);
     }, []);
 
-    /* ------------------------------------------------------------------ */
-    /* HELPERS                                                            */
-    /* ------------------------------------------------------------------ */
+    
     const unreadCount = notifications.filter((n) => !n.seen).length;
 
     // const markAsRead = async (id: string) => {
@@ -209,9 +196,7 @@ export default function Navbar() {
         router.push("/login");
     };
 
-    /* ------------------------------------------------------------------ */
-    /* RENDER                                                             */
-    /* ------------------------------------------------------------------ */
+     
     return (
         <nav className="bg-white shadow-md border-b border-orange-100 px-4 py-3 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -249,9 +234,8 @@ export default function Navbar() {
                     </Link>
                 </div>
 
-                {/* ------------------ Right Side (Notifications + Profile + Burger) */}
+                {/* Right Side */}
                 <div className="flex items-center space-x-3">
-                    {/* --------------------------- Notifications icon + dropdown ---- */}
                     <div className="relative" ref={notificationRef}>
                         <button
                             aria-label="Notifications"
@@ -333,7 +317,7 @@ export default function Navbar() {
                         )}
                     </div>
 
-                    {/* ------------------------------------- Profile dropdown ------ */}
+                     
                     <div className="relative" ref={profileRef}>
                         <button
                             onClick={() => setShowProfileMenu((p) => !p)}
@@ -408,7 +392,7 @@ export default function Navbar() {
                         )}
                     </div>
 
-                    {/* ---------------------------------------- Mobile burger ------ */}
+                    
                     <button
                         onClick={() => setShowMobileMenu((p) => !p)}
                         className="lg:hidden p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
@@ -422,7 +406,7 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* ----------------------------------------- Mobile nav links ----- */}
+            
             {showMobileMenu && (
                 <div className="lg:hidden mt-4 pb-4 border-t border-gray-100 bg-white">
                     <div className="flex flex-col space-y-2">
@@ -452,7 +436,7 @@ export default function Navbar() {
                 </div>
             )}
 
-            {/* ---------------------------- Full “All notifications” modal --- */}
+            
             <NotificationsModal
                 open={showAllModal}
                 onClose={() => setShowAllModal(false)}
