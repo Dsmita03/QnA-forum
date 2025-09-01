@@ -54,29 +54,36 @@ export default function Home() {
     const [totalAnswers, setTotalAnswers] = useState(0);
     const [totalUsers, setTotalUsers] = useState(0);
 
-     useEffect(() => {
+    useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const res = await axios.get(
-          "https://qna-forum.onrender.com/api/auth/me",
-          { withCredentials: true }
-        );
+    try {
+      const res = await axios.get(
+        "https://qna-forum.onrender.com/api/auth/me",
+        { withCredentials: true }
+      );
 
-        if (res.data?.user) {
-          setIsAuthenticated(true);
+      if (res.data?.user) {
+        const user = res.data.user;
+
+        if (user.role === "admin") {
+          router.replace("/admin");  
         } else {
-          setIsAuthenticated(false);
-          router.push("/login");
+          setIsAuthenticated(true); 
         }
-      } catch (err) {
-        console.error("Auth check failed:", err);
+      } else {
         setIsAuthenticated(false);
-        router.push("/login");
+        router.replace("/login");
       }
-    };
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      setIsAuthenticated(false);
+      router.replace("/login");
+    }
+  };
 
-    checkAuth();
-  }, [router]);
+  checkAuth();
+}, [router]);
+
 
     useEffect(() => {
         const fetchAnswers = async () => {
