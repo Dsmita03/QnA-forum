@@ -15,7 +15,6 @@ import {
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import {
     Search,
     Plus,
@@ -38,9 +37,6 @@ type Question = {
 };
 
 export default function Home() {
-    const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
     const [questions, setQuestions] = useState<Question[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState("latest");
@@ -53,38 +49,6 @@ export default function Home() {
     });
     const [totalAnswers, setTotalAnswers] = useState(0);
     const [totalUsers, setTotalUsers] = useState(0);
-
-    useEffect(() => {
-    const checkAuth = async () => {
-    try {
-      const res = await axios.get(
-        "https://qna-forum.onrender.com/api/auth/me",
-        { withCredentials: true }
-      );
-
-      if (res.data?.user) {
-        const user = res.data.user;
-
-        if (user.role === "admin") {
-          router.replace("/admin");  
-        } else {
-          setIsAuthenticated(true); 
-        }
-      } else {
-        setIsAuthenticated(false);
-        router.replace("/login");
-      }
-    } catch (err) {
-      console.error("Auth check failed:", err);
-      setIsAuthenticated(false);
-      router.replace("/login");
-    }
-  };
-
-  checkAuth();
-}, [router]);
-
-
     useEffect(() => {
         const fetchAnswers = async () => {
             try {
@@ -156,29 +120,14 @@ export default function Home() {
                 setLoading(false);
             }
         };
-        if (isAuthenticated) {
-      fetchQuestions();
-    }
-        // only fetch questions when totalAnswers is ready
+
+        // 🧠 only fetch questions when totalAnswers is ready
         if (totalAnswers !== 0 || totalAnswers === 0 || totalUsers !== 0) {
             // if you want to run this regardless of count being 0 or more
             fetchQuestions();
         }
-    }, [totalAnswers, totalUsers,isAuthenticated]); // dependency
+    }, [totalAnswers, totalUsers]); // dependency
 
-
-    if (isAuthenticated === null) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Checking authentication...</p>
-      </div>
-    );
-  }
-
-  //If not authenticated → redirecting
-  if (!isAuthenticated) {
-    return null;
-  }
     // Filter questions based on search term
     const filteredQuestions = questions.filter((question) => {
         if (!searchTerm.trim()) return true;
