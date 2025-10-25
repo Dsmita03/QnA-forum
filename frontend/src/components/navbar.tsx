@@ -213,7 +213,7 @@ export default function Navbar() {
                 {/* --------------------------------------- Desktop Nav Links ------ */}
                 <div className="hidden lg:flex items-center space-x-6">
                     <Link
-                        href="/"
+                        href="/home"
                         className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
                             pathname === "/"
                                 ? "text-orange-600 bg-orange-50"
@@ -411,7 +411,7 @@ export default function Navbar() {
                 <div className="lg:hidden mt-4 pb-4 border-t border-gray-100 bg-white">
                     <div className="flex flex-col space-y-2">
                         <Link
-                            href="/"
+                            href="/home"
                             onClick={() => setShowMobileMenu(false)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg block ${
                                 pathname === "/"
