@@ -121,7 +121,7 @@ export default function Home() {
             }
         };
 
-        // 🧠 only fetch questions when totalAnswers is ready
+        // only fetch questions when totalAnswers is ready
         if (totalAnswers !== 0 || totalAnswers === 0 || totalUsers !== 0) {
             // if you want to run this regardless of count being 0 or more
             fetchQuestions();

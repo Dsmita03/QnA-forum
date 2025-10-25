@@ -53,7 +53,7 @@ export default function Signup() {
                 if (data.role === "admin") {
                     router.push("/admin");
                 } else {
-                    router.push("/");
+                    router.push("/home");
                 }
             }
         } catch (err: any) {
